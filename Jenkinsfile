@@ -13,9 +13,8 @@ pipeline {
         stage('Run Robot Tests') {
             steps {
                 sh '''
-                source /opt/robot-env/bin/activate
+                . /opt/robot-env/bin/activate
                 robot -d results tests/
-                deactivate
                 '''
             }
         }

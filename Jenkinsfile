@@ -9,10 +9,11 @@ pipeline {
                     branch: 'main'
             }
         }
-
+        
         stage('Run Robot Tests') {
             steps {
                 sh '''
+                pkill -f chrome || true
                 . /opt/robot-env/bin/activate
                 robot -d results robot/tests
                 '''

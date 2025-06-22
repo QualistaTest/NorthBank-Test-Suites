@@ -1,15 +1,12 @@
-
 *** Settings ***
 Library    SeleniumLibrary
 
 *** Variables ***
 ${URL}            https://qualista.tech/test-mb3/
-${BROWSER}        Chrome
 ${VALID_USER}     demo@qualista.tech
 ${VALID_PASS}     password123
 ${INVALID_PASS}   wrongpassword
 ${NAME}           John
-
 
 ${SIGN_IN_BUTTON}    xpath=//button[normalize-space()='Sign In']
 ${LOGOUT_BUTTON}     xpath=//button[normalize-space()='Sign Out']
@@ -18,18 +15,23 @@ ${PASS_INPUT}        //input[@id='signin-password']
 ${LOGIN_BTN}         //button[@type='submit']
 ${WELCOME_MESSAGE}   Welcome back, ${NAME}
 ${WELCOME_TEXT}      Here's what's happening with your accounts today.
-${VALIDATION_TEXT}    Validation failed. Please check your credentials and try again.
-
+${VALIDATION_TEXT}   Validation failed. Please check your credentials and try again.
 
 *** Keywords ***
 Launch App And Login Page
-   Open Browser    ${URL}    ${BROWSER}
+    ${DIR}=    Evaluate    tempfile.mkdtemp()    modules=tempfile
+    ${OPTIONS}=    Evaluate    sys.modules['selenium.webdriver'].ChromeOptions()    modules=sys,selenium.webdriver
+    Call Method    ${OPTIONS}    add_argument    --headless=new
+    Call Method    ${OPTIONS}    add_argument    --user-data-dir=${DIR}
+    Call Method    ${OPTIONS}    add_argument    --no-sandbox
+    Call Method    ${OPTIONS}    add_argument    --disable-dev-shm-usage
+    Call Method    ${OPTIONS}    add_argument    --disable-gpu
+    Create Webdriver    Chrome    executable_path=/usr/bin/chromedriver    options=${OPTIONS}
+    Go To    ${URL}
     Maximize Browser Window
     Wait Until Element Is Visible    ${SIGN_IN_BUTTON}    5s
     Click Element                    ${SIGN_IN_BUTTON}
     Wait Until Element Is Visible    ${EMAIL_INPUT}       5s
-
-
 
 Login As Valid User
     Input Text    ${EMAIL_INPUT}    ${VALID_USER}

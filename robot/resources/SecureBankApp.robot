@@ -40,6 +40,7 @@ Launch App And Login Page
 
 
 
+
 Login As Valid User
     Input Text    ${EMAIL_INPUT}    ${VALID_USER}
     Input Text    ${PASS_INPUT}     ${VALID_PASS}

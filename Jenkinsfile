@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git credentialsId: 'github-token', url: 'https://github.com/QualistaTest/NorthBank-Test-Suites.git', branch: 'main'
+                git credentialsId: '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', url: 'https://github.com/QualistaTest/NorthBank-Test-Suites.git', branch: 'main'
             }
         }
 

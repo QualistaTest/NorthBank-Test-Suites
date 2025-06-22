@@ -24,17 +24,15 @@ Launch App And Login Page
     Call Method    ${OPTIONS}    add_argument    --no-sandbox
     Call Method    ${OPTIONS}    add_argument    --disable-dev-shm-usage
     Call Method    ${OPTIONS}    add_argument    --disable-gpu
-    Create Webdriver    Chrome    options=${OPTIONS}    executable_path=/usr/bin/chromedriver
+
+    ${SERVICE}=    Evaluate    sys.modules['selenium.webdriver.chrome.service'].Service('/usr/bin/chromedriver')    modules=sys,selenium.webdriver.chrome.service
+    Create Webdriver    Chrome    options=${OPTIONS}    service=${SERVICE}
+
     Go To    ${URL}
     Maximize Browser Window
     Wait Until Element Is Visible    ${SIGN_IN_BUTTON}    5s
     Click Element                    ${SIGN_IN_BUTTON}
     Wait Until Element Is Visible    ${EMAIL_INPUT}       5s
-
-
-
-
-
 
 
 

@@ -14,7 +14,7 @@ pipeline {
             steps {
                 sh '''
                 . /opt/robot-env/bin/activate
-                robot -d results tests/
+                robot -d results robot/tests
                 '''
             }
         }

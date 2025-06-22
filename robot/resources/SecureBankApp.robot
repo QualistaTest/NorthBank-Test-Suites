@@ -19,20 +19,22 @@ ${VALIDATION_TEXT}   Validation failed. Please check your credentials and try ag
 
 *** Keywords ***
 Launch App And Login Page
-    ${OPTIONS}=    Evaluate    sys.modules['selenium.webdriver'].ChromeOptions()    modules=sys,selenium.webdriver
-    Call Method    ${OPTIONS}    add_argument    --headless
-    Call Method    ${OPTIONS}    add_argument    --no-sandbox
-    Call Method    ${OPTIONS}    add_argument    --disable-dev-shm-usage
-    Call Method    ${OPTIONS}    add_argument    --disable-gpu
+    ${options}=    Evaluate    sys.modules['selenium.webdriver'].ChromeOptions()    modules=sys, selenium.webdriver
+    Call Method    ${options}    add_argument    --headless
+    Call Method    ${options}    add_argument    --no-sandbox
+    Call Method    ${options}    add_argument    --disable-dev-shm-usage
+    Call Method    ${options}    add_argument    --disable-gpu
 
-    ${SERVICE}=    Evaluate    sys.modules['selenium.webdriver.chrome.service'].Service('/usr/bin/chromedriver')    modules=sys,selenium.webdriver.chrome.service
-    Create Webdriver    Chrome    options=${OPTIONS}    service=${SERVICE}
+    ${service}=    Evaluate    sys.modules['selenium.webdriver.chrome.service'].Service(executable_path='/usr/bin/chromedriver')    modules=sys, selenium.webdriver.chrome.service
+
+    Create WebDriver    Chrome    options=${options}    service=${service}
 
     Go To    ${URL}
     Maximize Browser Window
-    Wait Until Element Is Visible    ${SIGN_IN_BUTTON}    5s
+    Wait Until Element Is Visible    ${SIGN_IN_BUTTON}    timeout=5s
     Click Element                    ${SIGN_IN_BUTTON}
-    Wait Until Element Is Visible    ${EMAIL_INPUT}       5s
+    Wait Until Element Is Visible    ${EMAIL_INPUT}       timeout=5s
+
 
 
 

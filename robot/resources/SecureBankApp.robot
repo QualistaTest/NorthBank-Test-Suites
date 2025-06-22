@@ -23,6 +23,9 @@ ${VALIDATION_TEXT}    Validation failed. Please check your credentials and try a
 *** Keywords ***
 Launch App And Login Page
    Open Browser    ${URL}    ${BROWSER}
+    ...    options=add_argument("--headless=new")
+    ...    options=add_argument("--no-user-data-dir")
+    ...    options=add_argument("--disable-dev-shm-usage")
     Maximize Browser Window
     Wait Until Element Is Visible    ${SIGN_IN_BUTTON}    5s
     Click Element                    ${SIGN_IN_BUTTON}

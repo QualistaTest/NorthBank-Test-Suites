@@ -11,8 +11,8 @@ pipeline {
         stage('Install Robot Framework') {
             steps {
                 sh '''
-                sudo apt update
-                sudo apt install -y python3-pip
+                apt update
+                apt install -y python3-pip
                 pip3 install robotframework
                 '''
             }

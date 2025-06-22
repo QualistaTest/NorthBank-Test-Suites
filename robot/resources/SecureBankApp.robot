@@ -20,16 +20,19 @@ ${WELCOME_MESSAGE}   Welcome back, ${NAME}
 ${WELCOME_TEXT}      Here's what's happening with your accounts today.
 ${VALIDATION_TEXT}    Validation failed. Please check your credentials and try again.
 
+
 *** Keywords ***
 Launch App And Login Page
-   Open Browser    ${URL}    ${BROWSER}
-    ...    options=add_argument("--headless=new")
-    ...    options=add_argument("--no-user-data-dir")
+    ${RANDOM}=    Evaluate    str(uuid.uuid4())[:8]    modules=uuid
+    ${CHROME_PROFILE_DIR}=    Set Variable    /tmp/chrome-profile-${RANDOM}
+    Open Browser    ${URL}    ${BROWSER}    options=add_argument("--headless=new")
+    ...    options=add_argument("--user-data-dir=${CHROME_PROFILE_DIR}")
     ...    options=add_argument("--disable-dev-shm-usage")
     Maximize Browser Window
     Wait Until Element Is Visible    ${SIGN_IN_BUTTON}    5s
     Click Element                    ${SIGN_IN_BUTTON}
     Wait Until Element Is Visible    ${EMAIL_INPUT}       5s
+
 
 Login As Valid User
     Input Text    ${EMAIL_INPUT}    ${VALID_USER}

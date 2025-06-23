@@ -25,8 +25,6 @@ Launch App And Login Page
     Call Method    ${options}    add_argument    --disable-dev-shm-usage
     Call Method    ${options}    add_argument    --disable-gpu
 
- #   ${service}=    Evaluate    sys.modules['selenium.webdriver.chrome.service'].Service(executable_path='/usr/bin/chromedriver')    modules=sys, selenium.webdriver.chrome.service
-
     Create WebDriver    Chrome    options=${options}    service=${service}
 
     Go To    ${URL}

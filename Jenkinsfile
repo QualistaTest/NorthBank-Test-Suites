@@ -44,7 +44,6 @@ pipeline {
             steps {
                 sh '''
                 . /opt/robot-env/bin/activate
-                pip install requests
                 python3 scripts/push_to_qase.py
                 '''
             }

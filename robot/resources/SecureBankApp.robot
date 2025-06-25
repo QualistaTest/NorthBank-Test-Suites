@@ -27,6 +27,7 @@ Launch App And Login Page
 
     Create WebDriver    Chrome    options=${options}   
 
+
     Go To    ${URL}
     Maximize Browser Window
     Wait Until Element Is Visible    ${SIGN_IN_BUTTON}    timeout=5s

@@ -34,11 +34,11 @@ pipeline {
             }
         }
 
-        stage('Publish Robot Report') {
-            steps {
-                robot outputPath: 'results'
-            }
-        }
+stage('Publish Robot Report') {
+    steps {
+        robot outputPath: 'results', outputFileName: 'output.xml'
+    }
+}
 
         stage('Push to Qase') {
             steps {

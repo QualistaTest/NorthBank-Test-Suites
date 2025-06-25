@@ -25,7 +25,8 @@ Launch App And Login Page
     Call Method    ${options}    add_argument    --disable-dev-shm-usage
     Call Method    ${options}    add_argument    --disable-gpu
 
-    Create WebDriver    Chrome    options=${options}    
+    Create WebDriver    Chrome    options=${options}   
+
 
     Go To    ${URL}
     Maximize Browser Window

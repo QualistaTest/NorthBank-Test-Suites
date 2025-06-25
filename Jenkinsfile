@@ -17,20 +17,11 @@ pipeline {
 
         stage('Run Robot Tests') {
             steps {
-                script {
-                    def exitCode = sh(
-                        script: '''
-                            pkill -f chrome || true
-                            . /opt/robot-env/bin/activate
-                            robot -d results --output results/output.xml --xunit results/xunit.xml robot/tests || true
-                        ''',
-                        returnStatus: true
-                    )
-                    echo "Robot tests finished with exit code: ${exitCode}"
-                    if (exitCode != 0) {
-                        currentBuild.result = 'UNSTABLE'
-                    }
-                }
+                sh '''
+                pkill -f chrome || true
+                . /opt/robot-env/bin/activate
+                robot -d results --output results/output.xml --xunit results/xunit.xml robot/tests
+                '''
             }
         }
 
@@ -40,13 +31,6 @@ stage('Publish Robot Report') {
     }
 }
 
-        stage('Push to Qase') {
-            steps {
-                sh '''
-                . /opt/robot-env/bin/activate
-                python3 scripts/push_to_qase.py
-                '''
-            }
-        }
+
     }
 }

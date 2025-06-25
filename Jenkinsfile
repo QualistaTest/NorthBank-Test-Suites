@@ -17,11 +17,20 @@ pipeline {
 
         stage('Run Robot Tests') {
             steps {
-                sh '''
-                pkill -f chrome || true
-                . /opt/robot-env/bin/activate
-                robot -d results --output results/output.xml --xunit results/xunit.xml robot/tests
-                '''
+                script {
+                    def exitCode = sh(
+                        script: '''
+                            pkill -f chrome || true
+                            . /opt/robot-env/bin/activate
+                            robot -d results --output results/output.xml --xunit results/xunit.xml robot/tests || true
+                        ''',
+                        returnStatus: true
+                    )
+                    echo "Robot tests finished with exit code: ${exitCode}"
+                    if (exitCode != 0) {
+                        currentBuild.result = 'UNSTABLE'
+                    }
+                }
             }
         }
 

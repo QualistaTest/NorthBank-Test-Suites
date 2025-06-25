@@ -17,20 +17,43 @@ pipeline {
 
         stage('Run Robot Tests') {
             steps {
-                sh '''
-                pkill -f chrome || true
-                . /opt/robot-env/bin/activate
-                robot -d results --output results/output.xml --xunit results/xunit.xml robot/tests
-                '''
+                script {
+                    def exitCode = sh(
+                        script: '''
+                            pkill -f chrome || true
+                            . /opt/robot-env/bin/activate
+                            # Write all output directly to 'results/' (no nesting)
+                            robot -d results --output output.xml --xunit xunit.xml --log log.html --report report.html robot/tests || true
+                        ''',
+                        returnStatus: true
+                    )
+                    echo "Robot tests finished with exit code: ${exitCode}"
+                    if (exitCode != 0) {
+                        currentBuild.result = 'UNSTABLE'
+                    }
+                }
             }
         }
 
-stage('Publish Robot Report') {
-    steps {
-        robot outputPath: 'results', outputFileName: 'output.xml'
+        stage('Publish Robot Report') {
+            steps {
+                robot outputPath: 'results', outputFileName: 'output.xml'
+            }
+        }
+
+        stage('Push to Qase') {
+            steps {
+                sh '''
+                . /opt/robot-env/bin/activate
+                python3 scripts/push_to_qase.py
+                '''
+            }
+        }
     }
-}
 
-
+    post {
+        always {
+            archiveArtifacts artifacts: 'results/**/*.*', fingerprint: true
+        }
     }
 }

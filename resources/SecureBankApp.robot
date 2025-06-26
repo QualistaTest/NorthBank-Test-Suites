@@ -81,6 +81,7 @@ Logout
     Wait Until Element Is Visible    ${EMAIL_INPUT}       10s
     Wait Until Element Is Enabled    ${EMAIL_INPUT}        5s
     Click Element                    ${EMAIL_INPUT}
+    Sleep    0.5
     Input Text                       ${EMAIL_INPUT}        ${VALID_USER}
     Input Text                       ${PASS_INPUT}         ${VALID_PASS}
 

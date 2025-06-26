@@ -1,0 +1,5 @@
+{
+  "robot.language-server.python": "python3",
+  "robot.runCommand": "robot -d results tests",
+  "robot.workspace.root": "${workspaceFolder}/robot"
+}

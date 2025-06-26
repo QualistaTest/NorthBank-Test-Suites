@@ -16,11 +16,13 @@ ${REASON}            Pizza party
 
 *** Test Cases ***
 Send Money Successfully
+    [Tags]    Demo-32
     Login As Valid User
     Send Money    ${RECIPIENT_EMAIL}    ${RECIPIENT_IBAN}    ${TRANSFER_AMOUNT}    ${REASON}
     Verify Transfer Success Popup
 
 Transfer With Insufficient Funds
+    [Tags]    Demo-33
     Login As Valid User
     Send Money    ${RECIPIENT_EMAIL}    ${RECIPIENT_IBAN}    ${LARGE_AMOUNT}    ${REASON}
     Page Should Contain    Insufficient funds

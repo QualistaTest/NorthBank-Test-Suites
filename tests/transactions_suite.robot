@@ -9,12 +9,14 @@ Suite Teardown  Close Browser
 
 *** Test Cases ***
 Filter Transactions By Amount Range
+    [Tags]    Demo-34
     Login As Valid User
     Go To Transactions
     Filter Transactions By Amount Range    $200 - $500
     Verify Transactions Are In Selected Amount Range    $200 - $500
 
 Export Transactions To CSV
+    [Tags]    Demo-35
     Login As Valid User
     Go To Transactions
     Export Transactions

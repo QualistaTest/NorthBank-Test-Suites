@@ -11,7 +11,7 @@ pipeline {
             steps {
                 git credentialsId: '905f8175-0bda-480f-8607-df38125d9eb1',
                     url: 'https://github.com/QualistaTest/NorthBank-Test-Suites.git',
-                    branch: 'main'
+                    branch: 'dev'
             }
         }
 

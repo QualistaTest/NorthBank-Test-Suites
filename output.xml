@@ -1,152 +1,252 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<robot generator="Robot 7.3.1 (Python 3.13.5 on darwin)" generated="2025-06-25T22:04:10.842235" rpa="false" schemaversion="5">
+<robot generator="Robot 7.3.1 (Python 3.13.5 on darwin)" generated="2025-06-26T18:09:38.415545" rpa="false" schemaversion="5">
 <suite id="s1" name="Authentication Suite" source="/Users/irinadragalova/Desktop/robot/tests/authentication_suite.robot">
 <kw name="Launch App And Login Page" owner="SecureBankApp" type="SETUP">
 <kw name="Get Chrome Options" owner="custom_chrome">
-<msg time="2025-06-25T22:04:10.940855" level="INFO">${options} = &lt;selenium.webdriver.chrome.options.Options object at 0x102eb63c0&gt;</msg>
+<msg time="2025-06-26T18:09:38.518122" level="INFO">${options} = &lt;selenium.webdriver.chrome.options.Options object at 0x102f7e3c0&gt;</msg>
 <var>${options}</var>
-<status status="PASS" start="2025-06-25T22:04:10.940741" elapsed="0.000862"/>
+<status status="PASS" start="2025-06-26T18:09:38.518003" elapsed="0.000823"/>
 </kw>
 <kw name="Create Webdriver" owner="SeleniumLibrary">
-<msg time="2025-06-25T22:04:10.942232" level="INFO">Creating an instance of the Chrome WebDriver.</msg>
+<msg time="2025-06-26T18:09:38.519258" level="INFO">Creating an instance of the Chrome WebDriver.</msg>
 <arg>Chrome</arg>
 <arg>options=${options}</arg>
 <doc>Creates an instance of Selenium WebDriver.</doc>
-<status status="PASS" start="2025-06-25T22:04:10.941960" elapsed="1.955534"/>
+<status status="PASS" start="2025-06-26T18:09:38.519067" elapsed="1.729140"/>
 </kw>
 <kw name="Go To" owner="SeleniumLibrary">
-<msg time="2025-06-25T22:04:12.899122" level="INFO">Opening url 'https://qualista.tech/test-mb3/'</msg>
+<msg time="2025-06-26T18:09:40.250771" level="INFO">Opening url 'https://qualista.tech/test-mb3/'</msg>
 <arg>${URL}</arg>
 <doc>Navigates the current browser window to the provided ``url``.</doc>
-<status status="PASS" start="2025-06-25T22:04:12.898762" elapsed="0.481440"/>
+<status status="PASS" start="2025-06-26T18:09:40.250332" elapsed="0.556637"/>
 </kw>
 <kw name="Wait Until Page Contains Element" owner="SeleniumLibrary">
 <arg>${SIGN_IN_BUTTON}</arg>
 <arg>10s</arg>
 <doc>Waits until the element ``locator`` appears on the current page.</doc>
-<status status="PASS" start="2025-06-25T22:04:13.380854" elapsed="0.019801"/>
+<status status="PASS" start="2025-06-26T18:09:40.807878" elapsed="0.024129"/>
 </kw>
 <kw name="Maximize Browser Window" owner="SeleniumLibrary">
 <doc>Maximizes current browser window.</doc>
-<status status="PASS" start="2025-06-25T22:04:13.400932" elapsed="0.019415"/>
+<status status="PASS" start="2025-06-26T18:09:40.832199" elapsed="0.017020"/>
 </kw>
 <kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
 <arg>${SIGN_IN_BUTTON}</arg>
 <arg>10s</arg>
 <doc>Waits until the element ``locator`` is visible.</doc>
-<status status="PASS" start="2025-06-25T22:04:13.421258" elapsed="0.022929"/>
+<status status="PASS" start="2025-06-26T18:09:40.849415" elapsed="0.010246"/>
 </kw>
 <kw name="Click Element" owner="SeleniumLibrary">
-<msg time="2025-06-25T22:04:13.445658" level="INFO">Clicking element 'xpath=//button[normalize-space()='Sign In']'.</msg>
+<msg time="2025-06-26T18:09:40.860010" level="INFO">Clicking element 'xpath=//button[normalize-space()='Sign In']'.</msg>
 <arg>${SIGN_IN_BUTTON}</arg>
 <doc>Click the element identified by ``locator``.</doc>
-<status status="PASS" start="2025-06-25T22:04:13.445072" elapsed="0.086997"/>
+<status status="PASS" start="2025-06-26T18:09:40.859828" elapsed="0.078535"/>
 </kw>
 <kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
 <arg>${EMAIL_INPUT}</arg>
 <arg>5s</arg>
 <doc>Waits until the element ``locator`` is visible.</doc>
-<status status="PASS" start="2025-06-25T22:04:13.532513" elapsed="0.010343"/>
+<status status="PASS" start="2025-06-26T18:09:40.939740" elapsed="0.022490"/>
 </kw>
-<status status="PASS" start="2025-06-25T22:04:10.940414" elapsed="2.603246"/>
+<status status="PASS" start="2025-06-26T18:09:38.517661" elapsed="2.444720"/>
 </kw>
 <test id="s1-t1" name="Logout" line="23">
 <kw name="Maximize Browser Window" owner="SeleniumLibrary" type="SETUP">
 <doc>Maximizes current browser window.</doc>
-<status status="PASS" start="2025-06-25T22:04:13.546701" elapsed="0.004089"/>
+<status status="PASS" start="2025-06-26T18:09:40.963020" elapsed="0.001148"/>
 </kw>
 <kw name="Logout" owner="SecureBankApp">
 <kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
 <arg>${SIGN_IN_BUTTON}</arg>
 <arg>10s</arg>
 <doc>Waits until the element ``locator`` is visible.</doc>
-<status status="PASS" start="2025-06-25T22:04:13.552142" elapsed="0.009244"/>
+<status status="PASS" start="2025-06-26T18:09:40.964660" elapsed="0.005941"/>
+</kw>
+<kw name="Execute Javascript" owner="SeleniumLibrary">
+<msg time="2025-06-26T18:09:40.971137" level="INFO">Executing JavaScript:
+arguments[0].click();xpath=//button[normalize-space()='Sign In']
+Without any arguments.</msg>
+<msg time="2025-06-26T18:09:41.263003" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="selenium-screenshot-79.png"&gt;&lt;img src="selenium-screenshot-79.png" width="800px"&gt;&lt;/a&gt;</msg>
+<msg time="2025-06-26T18:09:41.263268" level="FAIL">JavascriptException: Message: javascript error: Unexpected token '}'
+  (Session info: chrome=137.0.7151.121)
+Stacktrace:
+0   chromedriver                        0x0000000102621d14 cxxbridge1$str$ptr + 2735276
+1   chromedriver                        0x0000000102619f88 cxxbridge1$str$ptr + 2703136
+2   chromedriver                        0x000000010216a6f0 cxxbridge1$string$len + 90424
+3   chromedriver                        0x00000001021703a8 cxxbridge1$string$len + 114160
+4   chromedriver                        0x0000000102172978 cxxbridge1$string$len + 123840
+5   chromedriver                        0x00000001021f3dec cxxbridge1$string$len + 653364
+6   chromedriver                        0x00000001021f30c8 cxxbridge1$string$len + 650000
+7   chromedriver                        0x00000001021a5be8 cxxbridge1$string$len + 333360
+8   chromedriver                        0x00000001025e5598 cxxbridge1$str$ptr + 2487600
+9   chromedriver                        0x00000001025e8830 cxxbridge1$str$ptr + 2500552
+10  chromedriver                        0x00000001025c5c14 cxxbridge1$str$ptr + 2358188
+11  chromedriver                        0x00000001025e90b8 cxxbridge1$str$ptr + 2502736
+12  chromedriver                        0x00000001025b6dec cxxbridge1$str$ptr + 2297220
+13  chromedriver                        0x0000000102609420 cxxbridge1$str$ptr + 2634680
+14  chromedriver                        0x00000001026095ac cxxbridge1$str$ptr + 2635076
+15  chromedriver                        0x0000000102619bd4 cxxbridge1$str$ptr + 2702188
+16  libsystem_pthread.dylib             0x0000000193fcb2e4 _pthread_start + 136
+17  libsystem_pthread.dylib             0x0000000193fc60fc thread_start + 8
+</msg>
+<arg>arguments[0].click();</arg>
+<arg>${SIGN_IN_BUTTON}</arg>
+<doc>Executes the given JavaScript code with possible arguments.</doc>
+<status status="FAIL" start="2025-06-26T18:09:40.970743" elapsed="0.297878">JavascriptException: Message: javascript error: Unexpected token '}'
+  (Session info: chrome=137.0.7151.121)
+Stacktrace:
+0   chromedriver                        0x0000000102621d14 cxxbridge1$str$ptr + 2735276
+1   chromedriver                        0x0000000102619f88 cxxbridge1$str$ptr + 2703136
+2   chromedriver                        0x000000010216a6f0 cxxbridge1$string$len + 90424
+3   chromedriver                        0x00000001021703a8 cxxbridge1$string$len + 114160
+4   chromedriver                        0x0000000102172978 cxxbridge1$string$len + 123840
+5   chromedriver                        0x00000001021f3dec cxxbridge1$string$len + 653364
+6   chromedriver                        0x00000001021f30c8 cxxbridge1$string$len + 650000
+7   chromedriver                        0x00000001021a5be8 cxxbridge1$string$len + 333360
+8   chromedriver                        0x00000001025e5598 cxxbridge1$str$ptr + 2487600
+9   chromedriver                        0x00000001025e8830 cxxbridge1$str$ptr + 2500552
+10  chromedriver                        0x00000001025c5c14 cxxbridge1$str$ptr + 2358188
+11  chromedriver                        0x00000001025e90b8 cxxbridge1$str$ptr + 2502736
+12  chromedriver                        0x00000001025b6dec cxxbridge1$str$ptr + 2297220
+13  chromedriver                        0x0000000102609420 cxxbridge1$str$ptr + 2634680
+14  chromedriver                        0x00000001026095ac cxxbridge1$str$ptr + 2635076
+15  chromedriver                        0x0000000102619bd4 cxxbridge1$str$ptr + 2702188
+16  libsystem_pthread.dylib             0x0000000193fcb2e4 _pthread_start + 136
+17  libsystem_pthread.dylib             0x0000000193fc60fc thread_start + 8
+</status>
+</kw>
+<kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
+<arg>${LOGIN_BTN}</arg>
+<arg>10s</arg>
+<doc>Waits until the element ``locator`` is visible.</doc>
+<status status="NOT RUN" start="2025-06-26T18:09:41.268810" elapsed="0.000065"/>
 </kw>
 <kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
 <arg>${EMAIL_INPUT}</arg>
 <arg>10s</arg>
 <doc>Waits until the element ``locator`` is visible.</doc>
-<status status="PASS" start="2025-06-25T22:04:13.561559" elapsed="0.006260"/>
+<status status="NOT RUN" start="2025-06-26T18:09:41.268949" elapsed="0.000039"/>
+</kw>
+<kw name="Wait Until Element Is Enabled" owner="SeleniumLibrary">
+<arg>${EMAIL_INPUT}</arg>
+<arg>5s</arg>
+<doc>Waits until the element ``locator`` is enabled.</doc>
+<status status="NOT RUN" start="2025-06-26T18:09:41.269044" elapsed="0.000036"/>
+</kw>
+<kw name="Click Element" owner="SeleniumLibrary">
+<arg>${EMAIL_INPUT}</arg>
+<doc>Click the element identified by ``locator``.</doc>
+<status status="NOT RUN" start="2025-06-26T18:09:41.269136" elapsed="0.000111"/>
 </kw>
 <kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2025-06-25T22:04:13.568194" level="INFO">Typing text 'demo@qualista.tech' into text field '//input[@id='signin-email']'.</msg>
 <arg>${EMAIL_INPUT}</arg>
 <arg>${VALID_USER}</arg>
 <doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2025-06-25T22:04:13.567995" elapsed="0.115792"/>
+<status status="NOT RUN" start="2025-06-26T18:09:41.269308" elapsed="0.000037"/>
 </kw>
 <kw name="Input Text" owner="SeleniumLibrary">
-<msg time="2025-06-25T22:04:13.684148" level="INFO">Typing text 'password123' into text field '//input[@id='signin-password']'.</msg>
 <arg>${PASS_INPUT}</arg>
 <arg>${VALID_PASS}</arg>
 <doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<status status="PASS" start="2025-06-25T22:04:13.683951" elapsed="0.044019"/>
+<status status="NOT RUN" start="2025-06-26T18:09:41.269401" elapsed="0.000034"/>
 </kw>
 <kw name="Capture Page Screenshot" owner="SeleniumLibrary">
-<msg time="2025-06-25T22:04:14.023564" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="selenium-screenshot-78.png"&gt;&lt;img src="selenium-screenshot-78.png" width="800px"&gt;&lt;/a&gt;</msg>
 <doc>Takes a screenshot of the current page and embeds it into a log file.</doc>
-<status status="PASS" start="2025-06-25T22:04:13.728198" elapsed="0.295579"/>
+<status status="NOT RUN" start="2025-06-26T18:09:41.269551" elapsed="0.000059"/>
 </kw>
 <kw name="Click Element" owner="SeleniumLibrary">
-<msg time="2025-06-25T22:04:14.024066" level="INFO">Clicking element '//button[@type='submit']'.</msg>
 <arg>${LOGIN_BTN}</arg>
 <doc>Click the element identified by ``locator``.</doc>
-<status status="PASS" start="2025-06-25T22:04:14.023902" elapsed="0.043645"/>
+<status status="NOT RUN" start="2025-06-26T18:09:41.269712" elapsed="0.000038"/>
 </kw>
 <kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
 <arg>${LOGOUT_BUTTON}</arg>
 <arg>10s</arg>
 <doc>Waits until the element ``locator`` is visible.</doc>
-<status status="PASS" start="2025-06-25T22:04:14.067733" elapsed="0.007669"/>
+<status status="NOT RUN" start="2025-06-26T18:09:41.269817" elapsed="0.000040"/>
 </kw>
 <kw name="Click Element" owner="SeleniumLibrary">
-<msg time="2025-06-25T22:04:14.075682" level="INFO">Clicking element 'xpath=//button[normalize-space()='Sign Out']'.</msg>
 <arg>${LOGOUT_BUTTON}</arg>
 <doc>Click the element identified by ``locator``.</doc>
-<status status="PASS" start="2025-06-25T22:04:14.075534" elapsed="0.023115"/>
+<status status="NOT RUN" start="2025-06-26T18:09:41.269919" elapsed="0.000052"/>
 </kw>
 <kw name="Wait Until Element Is Visible" owner="SeleniumLibrary">
 <arg>${SIGN_IN_BUTTON}</arg>
-<arg>10s</arg>
+<arg>10s/</arg>
 <doc>Waits until the element ``locator`` is visible.</doc>
-<status status="PASS" start="2025-06-25T22:04:14.098928" elapsed="0.007623"/>
-</kw>
-<kw name="Page Should Contain Element" owner="SeleniumLibrary">
-<msg time="2025-06-25T22:04:14.110416" level="INFO">Current page contains element '//input[@id='signin-email']'.</msg>
-<arg>${EMAIL_INPUT}</arg>
-<doc>Verifies that element ``locator`` is found on the current page.</doc>
-<status status="PASS" start="2025-06-25T22:04:14.106709" elapsed="0.003855"/>
+<status status="NOT RUN" start="2025-06-26T18:09:41.270028" elapsed="0.000032"/>
 </kw>
 <kw name="Element Should Not Be Visible" owner="SeleniumLibrary">
-<msg time="2025-06-25T22:04:14.121346" level="INFO">Element 'xpath=//*[contains(text(),'Welcome back,')]' exists but is not displayed.</msg>
 <arg>${WELCOME}</arg>
 <doc>Verifies that the element identified by ``locator`` is NOT visible.</doc>
-<status status="PASS" start="2025-06-25T22:04:14.110672" elapsed="0.010842"/>
+<status status="NOT RUN" start="2025-06-26T18:09:41.270114" elapsed="0.000039"/>
 </kw>
 <kw name="Close Browser" owner="SeleniumLibrary" type="TEARDOWN">
 <doc>Closes the current browser.</doc>
-<status status="PASS" start="2025-06-25T22:04:14.121684" elapsed="0.071264"/>
+<status status="PASS" start="2025-06-26T18:09:41.270289" elapsed="0.081653"/>
 </kw>
-<status status="PASS" start="2025-06-25T22:04:13.551733" elapsed="0.641336"/>
+<status status="FAIL" start="2025-06-26T18:09:40.964453" elapsed="0.387647">JavascriptException: Message: javascript error: Unexpected token '}'
+  (Session info: chrome=137.0.7151.121)
+Stacktrace:
+0   chromedriver                        0x0000000102621d14 cxxbridge1$str$ptr + 2735276
+1   chromedriver                        0x0000000102619f88 cxxbridge1$str$ptr + 2703136
+2   chromedriver                        0x000000010216a6f0 cxxbridge1$string$len + 90424
+3   chromedriver                        0x00000001021703a8 cxxbridge1$string$len + 114160
+4   chromedriver                        0x0000000102172978 cxxbridge1$string$len + 123840
+5   chromedriver                        0x00000001021f3dec cxxbridge1$string$len + 653364
+6   chromedriver                        0x00000001021f30c8 cxxbridge1$string$len + 650000
+7   chromedriver                        0x00000001021a5be8 cxxbridge1$string$len + 333360
+8   chromedriver                        0x00000001025e5598 cxxbridge1$str$ptr + 2487600
+9   chromedriver                        0x00000001025e8830 cxxbridge1$str$ptr + 2500552
+10  chromedriver                        0x00000001025c5c14 cxxbridge1$str$ptr + 2358188
+11  chromedriver                        0x00000001025e90b8 cxxbridge1$str$ptr + 2502736
+12  chromedriver                        0x00000001025b6dec cxxbridge1$str$ptr + 2297220
+13  chromedriver                        0x0000000102609420 cxxbridge1$str$ptr + 2634680
+14  chromedriver                        0x00000001026095ac cxxbridge1$str$ptr + 2635076
+15  chromedriver                        0x0000000102619bd4 cxxbridge1$str$ptr + 2702188
+16  libsystem_pthread.dylib             0x0000000193fcb2e4 _pthread_start + 136
+17  libsystem_pthread.dylib             0x0000000193fc60fc thread_start + 8
+</status>
 </kw>
 <tag>Demo-31</tag>
-<status status="PASS" start="2025-06-25T22:04:13.544416" elapsed="0.648845"/>
+<status status="FAIL" start="2025-06-26T18:09:40.962486" elapsed="0.389858">JavascriptException: Message: javascript error: Unexpected token '}'
+  (Session info: chrome=137.0.7151.121)
+Stacktrace:
+0   chromedriver                        0x0000000102621d14 cxxbridge1$str$ptr + 2735276
+1   chromedriver                        0x0000000102619f88 cxxbridge1$str$ptr + 2703136
+2   chromedriver                        0x000000010216a6f0 cxxbridge1$string$len + 90424
+3   chromedriver                        0x00000001021703a8 cxxbridge1$string$len + 114160
+4   chromedriver                        0x0000000102172978 cxxbridge1$string$len + 123840
+5   chromedriver                        0x00000001021f3dec cxxbridge1$string$len + 653364
+6   chromedriver                        0x00000001021f30c8 cxxbridge1$string$len + 650000
+7   chromedriver                        0x00000001021a5be8 cxxbridge1$string$len + 333360
+8   chromedriver                        0x00000001025e5598 cxxbridge1$str$ptr + 2487600
+9   chromedriver                        0x00000001025e8830 cxxbridge1$str$ptr + 2500552
+10  chromedriver                        0x00000001025c5c14 cxxbridge1$str$ptr + 2358188
+11  chromedriver                        0x00000001025e90b8 cxxbridge1$str$ptr + 2502736
+12  chromedriver                        0x00000001025b6dec cxxbridge1$str$ptr + 2297220
+13  chromedriver                        0x0000000102609420 cxxbridge1$str$ptr + 2634680
+14  chromedriver                        0x00000001026095ac cxxbridge1$str$ptr + 2635076
+15  chromedriver                        0x0000000102619bd4 cxxbridge1$str$ptr + 2702188
+16  libsystem_pthread.dylib             0x0000000193fcb2e4 _pthread_start + 136
+17  libsystem_pthread.dylib             0x0000000193fc60fc thread_start + 8
+</status>
 </test>
 <kw name="Close Browser" owner="SeleniumLibrary" type="TEARDOWN">
 <doc>Closes the current browser.</doc>
-<status status="PASS" start="2025-06-25T22:04:14.193720" elapsed="0.000138"/>
+<status status="PASS" start="2025-06-26T18:09:41.353238" elapsed="0.000154"/>
 </kw>
-<status status="PASS" start="2025-06-25T22:04:10.844303" elapsed="3.349598"/>
+<status status="FAIL" start="2025-06-26T18:09:38.418287" elapsed="2.935157"/>
 </suite>
 <statistics>
 <total>
-<stat pass="1" fail="0" skip="0">All Tests</stat>
+<stat pass="0" fail="1" skip="0">All Tests</stat>
 </total>
 <tag>
-<stat pass="1" fail="0" skip="0">Demo-31</stat>
+<stat pass="0" fail="1" skip="0">Demo-31</stat>
 </tag>
 <suite>
-<stat name="Authentication Suite" id="s1" pass="1" fail="0" skip="0">Authentication Suite</stat>
+<stat name="Authentication Suite" id="s1" pass="0" fail="1" skip="0">Authentication Suite</stat>
 </suite>
 </statistics>
 <errors>

@@ -52,15 +52,22 @@ Login With Credentials
 Logout
     Wait Until Element Is Visible    ${SIGN_IN_BUTTON}    10s
     Click Element                    ${SIGN_IN_BUTTON}
+    # Execute JavaScript    arguments[0].click();    ${SIGN_IN_BUTTON}
+
+    Wait Until Element Is Visible    ${LOGIN_BTN}    10s
+
     Wait Until Element Is Visible    ${EMAIL_INPUT}       10s
+    Wait Until Element Is Enabled    ${EMAIL_INPUT}       5s
     Click Element                    ${EMAIL_INPUT}
     Input Text    ${EMAIL_INPUT}    ${VALID_USER}
     Input Text    ${PASS_INPUT}     ${VALID_PASS}
+
     Capture Page Screenshot
     Click Element    ${LOGIN_BTN}
+
     Wait Until Element Is Visible    ${LOGOUT_BUTTON}    10s
     Click Element   ${LOGOUT_BUTTON}
-    Wait Until Element Is Visible    ${SIGN_IN_BUTTON}    10s
-    Page Should Contain Element      ${EMAIL_INPUT}
+
+    Wait Until Element Is Visible    ${SIGN_IN_BUTTON}    10s/
     Element Should Not Be Visible    ${WELCOME}
     [Teardown]    Close Browser

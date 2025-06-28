@@ -48,6 +48,7 @@ Login As Valid User
 
 
 Logout
+    [Arguments]    ${email}    ${password}
     Wait Until Element Is Visible    ${EMAIL_INPUT}    5s
     Wait Until Element Is Enabled    ${EMAIL_INPUT}    5s
     Input Text    ${EMAIL_INPUT}    ${VALID_USER}

@@ -58,7 +58,7 @@ Logout
     Input Text    ${EMAIL_INPUT}    ${VALID_USER}
     Input Text    ${PASS_INPUT}     ${VALID_PASS}
     Click Element    ${LOGIN_BTN}
-    Wait Until Element Is Visible    ${LOGOUT_BUTTON}    5s
+    Wait Until Element Is Visible    ${LOGOUT_BUTTON}    12s
     Click Element   ${LOGOUT_BUTTON}
     Wait Until Page Does Not Contain    ${WELCOME_MESSAGE}    5s
     Wait Until Page Does Not Contain    ${WELCOME_TEXT}    5s

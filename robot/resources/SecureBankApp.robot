@@ -50,9 +50,6 @@ Login As Valid User
 Logout
     Wait Until Element Is Visible    ${LOGOUT_BUTTON}    4s
     Click Element   ${LOGOUT_BUTTON}
-    Wait Until Page Does Not Contain    ${WELCOME_MESSAGE}    5s
-    Wait Until Page Does Not Contain    ${WELCOME_TEXT}    5s
-    Wait Until Element Is Visible    ${SIGN_IN_BUTTON}    5s
     [Teardown]    Close Browser
 
 

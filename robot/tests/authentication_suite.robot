@@ -14,9 +14,11 @@ Go to login page
 Valid Login
     Login As Valid User
 
+Logout
+    Logout
+
 Invalid Login With Wrong Password
     Login With Credentials    ${VALID_USER}    ${INVALID_PASS}
     Page Should Contain    ${VALIDATION_TEXT}
 
-Logout
-    Logout
+

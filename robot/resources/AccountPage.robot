@@ -3,7 +3,7 @@
 Library    SeleniumLibrary
 
 *** Variables ***
-${OPEN_ACCOUNT_BTN}     xpath=//a[contains(text(),'Open Account')]
+${OPEN_ACCOUNT_BTN}     xpath=//nav//a[normalize-space()='Open Account']
 ${SUBMIT_ACCOUNT_BTN}   xpath=//button[contains(text(),'Submit')]
 
 *** Keywords ***

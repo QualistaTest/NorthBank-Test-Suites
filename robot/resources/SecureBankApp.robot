@@ -48,6 +48,8 @@ Login As Valid User
 
 
 Logout
+    Wait Until Element Is Visible    ${EMAIL_INPUT}    5s
+    Wait Until Element Is Enabled    ${EMAIL_INPUT}    5s
     Input Text    ${EMAIL_INPUT}    ${VALID_USER}
     Input Text    ${PASS_INPUT}     ${VALID_PASS}
     Click Element    ${LOGIN_BTN}

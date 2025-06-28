@@ -48,14 +48,6 @@ Login As Valid User
 
 
 Logout
-    [Arguments]    ${email}    ${password}
-    Wait Until Element Is Visible    ${EMAIL_INPUT}    5s
-    Wait Until Element Is Enabled    ${EMAIL_INPUT}    5s
-    Input Text    ${EMAIL_INPUT}    ${VALID_USER}
-    Input Text    ${PASS_INPUT}     ${VALID_PASS}
-    Click Element    ${LOGIN_BTN}
-    Wait Until Page Contains    ${WELCOME_MESSAGE}    5s
-    Wait Until Page Contains    ${WELCOME_TEXT}    5s
     Wait Until Element Is Visible    ${LOGOUT_BUTTON}    4s
     Click Element   ${LOGOUT_BUTTON}
     Wait Until Page Does Not Contain    ${WELCOME_MESSAGE}    5s

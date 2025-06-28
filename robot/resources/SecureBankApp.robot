@@ -9,7 +9,7 @@ ${INVALID_PASS}   wrongpassword
 ${NAME}           John
 
 ${SIGN_IN_BUTTON}    xpath=//button[normalize-space()='Sign In']
-${LOGOUT_BUTTON}     xpath=//button[normalize-space()='Sign Out']
+${LOGOUT_BUTTON}     xpath=//*[normalize-space(text())='Sign Out']
 ${EMAIL_INPUT}       //input[@id='signin-email']
 ${PASS_INPUT}        //input[@id='signin-password']
 ${LOGIN_BTN}         //button[@type='submit']

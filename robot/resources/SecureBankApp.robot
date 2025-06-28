@@ -46,13 +46,6 @@ Login As Valid User
     Element Text Should Be    xpath=//div[@id='main-content']//h2    ${WELCOME_MESSAGE}
     Element Text Should Be    xpath=//div[@id='main-content']//p    ${WELCOME_TEXT}
 
-Login With Credentials
-    [Arguments]    ${email}    ${password}
-    Input Text    ${EMAIL_INPUT}    ${email}
-    Input Text    ${PASS_INPUT}     ${password}
-    Click Element    ${LOGIN_BTN}
-    Wait Until Page Contains    ${WELCOME_MESSAGE}    5s
-    Wait Until Page Contains    ${WELCOME_TEXT}    5s
 
 Logout
     Input Text    ${EMAIL_INPUT}    ${VALID_USER}
@@ -66,3 +59,14 @@ Logout
     Wait Until Page Does Not Contain    ${WELCOME_TEXT}    5s
     Wait Until Element Is Visible    ${SIGN_IN_BUTTON}    5s
     [Teardown]    Close Browser
+
+
+Login With Credentials
+    [Arguments]    ${email}    ${password}
+    Input Text    ${EMAIL_INPUT}    ${email}
+    Input Text    ${PASS_INPUT}     ${password}
+    Click Element    ${LOGIN_BTN}
+    Wait Until Page Contains    ${WELCOME_MESSAGE}    5s
+    Wait Until Page Contains    ${WELCOME_TEXT}    5s
+
+

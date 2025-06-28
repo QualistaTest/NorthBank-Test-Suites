@@ -5,7 +5,7 @@ Library    SeleniumLibrary
 ${URL}            https://qualista.tech/test-mb3/
 ${VALID_USER}     demo@qualista.tech
 ${VALID_PASS}     password123
-${INVALID_PASS}   
+${INVALID_PASS}   wrongpassword
 ${NAME}           John
 
 ${SIGN_IN_BUTTON}    xpath=//button[normalize-space()='Sign In']

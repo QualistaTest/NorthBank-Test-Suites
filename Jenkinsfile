@@ -55,7 +55,6 @@ post {
     always {
         archiveArtifacts artifacts: 'results/**/*.*', fingerprint: true
 
-project = SCRUM AND labels in (test_passed, test_failed, test_skipped)
 script {
     def xml = readFile('results/xunit.xml')
     def parser = new XmlParser()

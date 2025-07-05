@@ -55,7 +55,7 @@ pipeline {
         always {
             archiveArtifacts artifacts: 'results/**/*.*', fingerprint: true
              // ✅ Add Jira comment here
-            jiraComment issueKey: 'PROJ-123', body: "Build finished. Report: ${env.BUILD_URL}"
+            jiraComment issueKey: 'NorthBank Project', body: "Build finished. Report: ${env.BUILD_URL}"
         
         }
     }

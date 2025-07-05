@@ -4,6 +4,7 @@ pipeline {
     environment {
         QASE_PROJECT_CODE = credentials('QASE_PROJECT_CODE')
         QASE_API_TOKEN = credentials('QASE_API_TOKEN')
+        JIRA_ISSUE_KEY = 'SCRUM-3'
     }
 
     stages {
@@ -22,7 +23,6 @@ pipeline {
                         script: '''
                             pkill -f chrome || true
                             . /opt/robot-env/bin/activate
-                            # Write all output directly to 'results/' (no nesting)
                             robot -d results --output output.xml --xunit xunit.xml --log log.html --report report.html robot/tests || true
                         ''',
                         returnStatus: true
@@ -44,8 +44,8 @@ pipeline {
         stage('Push to Qase') {
             steps {
                 sh '''
-                . /opt/robot-env/bin/activate
-                python3 scripts/push_to_qase.py
+                    . /opt/robot-env/bin/activate
+                    python3 scripts/push_to_qase.py
                 '''
             }
         }
@@ -54,9 +54,11 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: 'results/**/*.*', fingerprint: true
-             // ✅ Add Jira comment here
-            jiraComment issueKey: 'NorthBank Project', body: "Build finished. Report: ${env.BUILD_URL}"
-        
+
+            // ✅ Post build comment to Jira
+            steps {
+                jiraComment issueKey: "${env.JIRA_ISSUE_KEY}", body: "🔁 Build completed: ${env.BUILD_URL}"
+            }
         }
     }
 }

@@ -51,14 +51,13 @@ pipeline {
         }
     }
 
-    post {
-        always {
-            archiveArtifacts artifacts: 'results/**/*.*', fingerprint: true
+post {
+    always {
+        archiveArtifacts artifacts: 'results/**/*.*', fingerprint: true
 
-            // ✅ Post build comment to Jira
-            steps {
-                jiraComment issueKey: "${env.JIRA_ISSUE_KEY}", body: "🔁 Build completed: ${env.BUILD_URL}"
-            }
-        }
+        jiraComment issueKey: "${env.JIRA_ISSUE_KEY}", body: "🔁 Build completed: ${env.BUILD_URL}"
+    }
+}
+
     }
 }

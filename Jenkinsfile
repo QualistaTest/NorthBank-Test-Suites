@@ -54,6 +54,9 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: 'results/**/*.*', fingerprint: true
+             // ✅ Add Jira comment here
+            jiraComment issueKey: 'PROJ-123', body: "Build finished. Report: ${env.BUILD_URL}"
+        
         }
     }
 }

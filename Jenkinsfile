@@ -55,19 +55,19 @@ post {
     always {
         archiveArtifacts artifacts: 'results/**/*.*', fingerprint: true
 
-        script {
-            def xml = readFile('results/xunit.xml')
-            def parser = new XmlParser()
-            def testSuite = parser.parseText(xml)
+       script {
+    def xml = readFile('results/xunit.xml')
+    def parser = new XmlParser()
+    def testSuite = parser.parseText(xml)
+    def attrs = testSuite.attributes()
 
-            def total = testSuite.'@tests' ?: '0'
-            def failures = testSuite.'@failures' ?: '0'
-            def skipped = testSuite.'@skipped' ?: '0'
-            def passed = (total.toInteger() - failures.toInteger() - skipped.toInteger()).toString()
+    def total = attrs['tests'] ?: '0'
+    def failures = attrs['failures'] ?: '0'
+    def skipped = attrs['skipped'] ?: '0'
+    def passed = (total.toInteger() - failures.toInteger() - skipped.toInteger()).toString()
 
-            env.TEST_SUMMARY = "✅ ${passed} passed, ❌ ${failures} failed, ⚠️ ${skipped} skipped"
-        }
-
+    env.TEST_SUMMARY = "✅ ${passed} passed, ❌ ${failures} failed, ⚠️ ${skipped} skipped"
+}
         jiraComment issueKey: "${env.JIRA_ISSUE_KEY}", body: """
 🔁 *Build completed:* [View Build](${env.BUILD_URL})
 

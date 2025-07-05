@@ -55,19 +55,31 @@ post {
     always {
         archiveArtifacts artifacts: 'results/**/*.*', fingerprint: true
 
-       script {
+project = SCRUM AND labels in (test_passed, test_failed, test_skipped)
+script {
     def xml = readFile('results/xunit.xml')
     def parser = new XmlParser()
     def testSuite = parser.parseText(xml)
     def attrs = testSuite.attributes()
 
-    def total = attrs['tests'] ?: '0'
-    def failures = attrs['failures'] ?: '0'
-    def skipped = attrs['skipped'] ?: '0'
-    def passed = (total.toInteger() - failures.toInteger() - skipped.toInteger()).toString()
+    def total = attrs['tests']?.toInteger() ?: 0
+    def failures = attrs['failures']?.toInteger() ?: 0
+    def skipped = attrs['skipped']?.toInteger() ?: 0
+    def passed = total - failures - skipped
 
     env.TEST_SUMMARY = "✅ ${passed} passed, ❌ ${failures} failed, ⚠️ ${skipped} skipped"
+
+    // 🔁 Remove old labels (optional — requires Jira API calls)
+    // 👉 Add labels based on test results
+    if (failures > 0) {
+        jiraAddLabel issueKey: "${env.JIRA_ISSUE_KEY}", label: 'test_failed'
+    } else if (skipped > 0) {
+        jiraAddLabel issueKey: "${env.JIRA_ISSUE_KEY}", label: 'test_skipped'
+    } else if (passed > 0) {
+        jiraAddLabel issueKey: "${env.JIRA_ISSUE_KEY}", label: 'test_passed'
+    }
 }
+
         jiraComment issueKey: "${env.JIRA_ISSUE_KEY}", body: """
 🔁 *Build completed:* [View Build](${env.BUILD_URL})
 

@@ -41,6 +41,18 @@ pipeline {
             }
         }
 
+        stage('Upload to Xray') {
+            steps {
+                xrayImportResult(
+                    serverInstance: 'your-jira-instance-name', // <-- Update in Jenkins config
+                    resultFile: 'results/output.xml',
+                    testFormat: 'ROBOT',
+                    projectKey: 'SCRUM',
+                    testExecutionKey: '' // empty = Xray creates a new Test Execution issue
+                )
+            }
+        }
+
         stage('Push to Qase') {
             steps {
                 sh '''
@@ -51,40 +63,29 @@ pipeline {
         }
     }
 
-post {
-    always {
-        archiveArtifacts artifacts: 'results/**/*.*', fingerprint: true
+    post {
+        always {
+            archiveArtifacts artifacts: 'results/**/*.*', fingerprint: true
 
-script {
-    def xml = readFile('results/xunit.xml')
-    def parser = new XmlParser()
-    def testSuite = parser.parseText(xml)
-    def attrs = testSuite.attributes()
+            script {
+                def xml = readFile('results/xunit.xml')
+                def parser = new XmlParser()
+                def testSuite = parser.parseText(xml)
+                def attrs = testSuite.attributes()
 
-    def total = attrs['tests']?.toInteger() ?: 0
-    def failures = attrs['failures']?.toInteger() ?: 0
-    def skipped = attrs['skipped']?.toInteger() ?: 0
-    def passed = total - failures - skipped
+                def total = attrs['tests']?.toInteger() ?: 0
+                def failures = attrs['failures']?.toInteger() ?: 0
+                def skipped = attrs['skipped']?.toInteger() ?: 0
+                def passed = total - failures - skipped
 
-    env.TEST_SUMMARY = "✅ ${passed} passed, ❌ ${failures} failed, ⚠️ ${skipped} skipped"
+                env.TEST_SUMMARY = "✅ ${passed} passed, ❌ ${failures} failed, ⚠️ ${skipped} skipped"
+            }
 
-    // 🔁 Remove old labels (optional — requires Jira API calls)
-    // 👉 Add labels based on test results
-    if (failures > 0) {
-        jiraAddLabel issueKey: "${env.JIRA_ISSUE_KEY}", label: 'test_failed'
-    } else if (skipped > 0) {
-        jiraAddLabel issueKey: "${env.JIRA_ISSUE_KEY}", label: 'test_skipped'
-    } else if (passed > 0) {
-        jiraAddLabel issueKey: "${env.JIRA_ISSUE_KEY}", label: 'test_passed'
-    }
-}
-
-        jiraComment issueKey: "${env.JIRA_ISSUE_KEY}", body: """
+            jiraComment issueKey: "${env.JIRA_ISSUE_KEY}", body: """
 🔁 *Build completed:* [View Build](${env.BUILD_URL})
 
 📊 *Test Summary:* ${env.TEST_SUMMARY}
 """
+        }
     }
-}
-
 }

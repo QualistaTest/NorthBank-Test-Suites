@@ -44,16 +44,19 @@ pipeline {
 
 stage('Upload to Xray') {
     steps {
-        step([
-            $class: 'XrayImportBuilder',
-            configurationId: '77a64d61-d3d7-44cf-8859-b2625f9678c3', // ✅ CORRECT internal config ID
-            importFilePath: 'results/output.xml',
-            importFormat: 'robot',
-            projectKey: 'SCRUM',
-            importToSameExecution: 'false'
-        ])
+        script {
+            def xrayStep = [$class: 'XrayImportBuilder',
+                configurationId: '77a64d61-d3d7-44cf-8859-b2625f9678c3',
+                importFilePath: 'results/output.xml',
+                importFormat: 'robot',
+                projectKey: 'SCRUM',
+                importToSameExecution: 'false'
+            ]
+            step(xrayStep)
+        }
     }
 }
+
 
 
         stage('Push to Qase') {

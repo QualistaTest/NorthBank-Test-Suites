@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -49,7 +50,7 @@ pipeline {
                     importFilePath: 'results/output.xml',
                     importFormat: 'robot',
                     projectKey: 'SCRUM',
-                    importToSameExecution: false
+                    importToSameExecution: 'false'
                 ])
             }
         }

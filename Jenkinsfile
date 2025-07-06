@@ -43,13 +43,13 @@ pipeline {
 
         stage('Upload to Xray') {
             steps {
-                xrayImportResult(
-                    serverInstance: 'your-jira-instance-name', // <-- Update in Jenkins config
-                    resultFile: 'results/output.xml',
-                    testFormat: 'ROBOT',
-                    projectKey: 'SCRUM',
-                    testExecutionKey: '' // empty = Xray creates a new Test Execution issue
-                )
+xrayImportResult(
+  serverInstance: 'xray-cloud',
+  resultFile: 'results/output.xml',
+  testFormat: 'ROBOT',
+  projectKey: 'SCRUM',
+  testExecutionKey: ''
+)
             }
         }
 

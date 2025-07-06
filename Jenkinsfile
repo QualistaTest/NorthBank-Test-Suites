@@ -46,7 +46,7 @@ pipeline {
             steps {
                 step([
                     $class: 'XrayImportBuilder',
-                    endpointName: '99D3380F77244817B4F11A1A744AB5AE', // must match Jenkins global config
+                    configurationId: '99D3380F77244817B4F11A1A744AB5AE', // must match Jenkins global config
                     importFilePath: 'results/output.xml',
                     importFormat: 'robot',
                     projectKey: 'SCRUM',

@@ -42,15 +42,15 @@ pipeline {
         }
 
         stage('Upload to Xray') {
-        step([
-  $class: 'XrayImportBuilder',
-  endpointName: 'xray-cloud', // same as configured in Jenkins global config
-  importFilePath: 'results/output.xml',
-  importFormat: 'robot',
-  projectKey: 'SCRUM',
-  importToSameExecution: false
-])
-
+            steps {
+                step([
+                    $class: 'XrayImportBuilder',
+                    endpointName: 'xray-cloud', // must match Jenkins global config
+                    importFilePath: 'results/output.xml',
+                    importFormat: 'robot',
+                    projectKey: 'SCRUM',
+                    importToSameExecution: false
+                ])
             }
         }
 

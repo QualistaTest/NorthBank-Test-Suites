@@ -8,6 +8,5 @@ ${SUBMIT_ACCOUNT_BTN}   xpath=//button[contains(text(),'Submit')]
 
 *** Keywords ***
 Open New Account
-    [Tags]    Demo-28
     Click Element    ${OPEN_ACCOUNT_BTN}
     Click Button     ${SUBMIT_ACCOUNT_BTN}

@@ -14,6 +14,7 @@ ${POPUP_DONE_BUTTON}  xpath=//button[normalize-space()='Done']
 
 *** Keywords ***
 Send Money
+    [Tags]    Demo-32
     [Arguments]    ${email}    ${iban}    ${amount}    ${note}=Thanks
     # Navigate to Transfer tab first
     Click Element    ${SEND_MONEY_LINK}
@@ -33,6 +34,7 @@ Send Money
     Click Button                     xpath=//button[@onclick='sendMoney()']
 
 Verify Transfer Success Popup
+    [Tags]    Demo-33
     Wait Until Page Contains    ${POPUP_TITLE}    5s
     Wait Until Page Contains    ${POPUP_MESSAGE}    5s
     Click Button                ${POPUP_DONE_BUTTON}

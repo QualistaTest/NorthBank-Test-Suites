@@ -16,6 +16,7 @@ Go To Transactions
     Wait Until Page Contains    All Transactions
 
 Filter Transactions By Amount Range
+    [Tags]    Demo-34
     [Arguments]    ${range}
     Wait Until Element Is Visible    xpath=//label[contains(., 'Amount Range')]/following-sibling::select    5s
     Select From List By Label        xpath=//label[contains(., 'Amount Range')]/following-sibling::select    ${range}
@@ -45,6 +46,7 @@ Verify Transactions Are In Selected Amount Range
     END
 
 Export Transactions
+    [Tags]    Demo-35
     Click Button    ${EXPORT_CSV_BTN}
     Sleep    1s
 

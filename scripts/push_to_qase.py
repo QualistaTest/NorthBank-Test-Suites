@@ -1,4 +1,3 @@
-
 import os
 import requests
 import json
@@ -30,17 +29,22 @@ if response.status_code != 200:
 run_id = response.json()["result"]["id"]
 print(f"✅ Test run created: {run_id}")
 
-# Step 2 (Optional): Upload a placeholder result (dummy case with case_id=1)
-# You'll replace or loop this over real test results in production
-result_data = {
+# Step 2: Upload a result for case_id=1 (as a list of dicts)
+result_data = [{
+    "case_id": 1,
     "status": "passed",
     "comment": "Example result from Jenkins",
     "time": 10,
     "stacktrace": "",
     "defect": False
-}
+}]
 
-result_response = requests.post(f"{API_BASE}/result/{QASE_PROJECT}/{run_id}/1", headers=headers, json=result_data)
+# POST to the correct endpoint WITHOUT /1 at the end
+result_response = requests.post(
+    f"{API_BASE}/result/{QASE_PROJECT}/{run_id}",
+    headers=headers,
+    json=result_data
+)
 
 if result_response.status_code == 200:
     print("✅ Result uploaded for case_id=1")

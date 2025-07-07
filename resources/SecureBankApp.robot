@@ -33,7 +33,6 @@ Launch App And Login Page
     Click Element                    ${SIGN_IN_BUTTON}
     Wait Until Element Is Visible    ${EMAIL_INPUT}       5s
 Login As Valid User
-    [Tags]    Demo-29
     Input Text    ${EMAIL_INPUT}    ${VALID_USER}
     Input Text    ${PASS_INPUT}     ${VALID_PASS}
     Click Element    ${LOGIN_BTN}
@@ -43,7 +42,6 @@ Login As Valid User
     Element Text Should Be    xpath=//div[@id='main-content']//p    ${WELCOME_TEXT}
 
 Login With Credentials
-    [Tags]    Demo-30
     [Arguments]    ${email}    ${password}
     Input Text    ${EMAIL_INPUT}    ${email}
     Input Text    ${PASS_INPUT}     ${password}
@@ -74,7 +72,6 @@ Login With Credentials
 #     Element Should Not Be Visible    ${WELCOME}
 
 Logout
-    [Tags]    Demo-31
     Wait Until Element Is Visible    ${SIGN_IN_BUTTON}    10s
 
     ${modal_visible}=    Run Keyword And Return Status    Element Should Be Visible    xpath=//div[@id="signin-modal" and contains(@class, "active")]

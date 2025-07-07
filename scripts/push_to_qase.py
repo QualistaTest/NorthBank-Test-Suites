@@ -109,8 +109,8 @@ for suite in root.iter("suite"):
         case_id = None
         status = None
         for tag in test.iter("tag"):
-            if tag.text.startswith("QASE-"):
-                case_id = int(tag.text.replace("QASE-", ""))
+            if tag.text.startswith("Demo-"):
+                case_id = int(tag.text.replace("Demo-", ""))
         status_elem = test.find("status")
         if status_elem is not None:
             status_text = status_elem.attrib["status"].upper()
@@ -123,7 +123,7 @@ for suite in root.iter("suite"):
             })
 
 if not results:
-    print("❌ No valid results found in output.xml. Make sure tests have tags like QASE-101.")
+    print("❌ No valid results found in output.xml. Make sure tests have tags like Demo-101.")
     exit(1)
 
 # Create a test run

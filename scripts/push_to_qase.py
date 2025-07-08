@@ -2,7 +2,6 @@ import os
 import requests
 import xml.etree.ElementTree as ET
 
-# Load Qase project and API token from environment variables, or use defaults for testing
 QASE_PROJECT = os.getenv("QASE_PROJECT_CODE", "Demo")
 QASE_API_TOKEN = os.getenv("QASE_API_TOKEN", "dad03e7a8bc5d9b5dfef3c4a983b9e0a60a2cc4071ead1f7afd149f0822d12af")
 BASE_URL = "https://api.qase.io/v1"
@@ -17,6 +16,7 @@ def extract_results(suite):
     for test in suite.findall("test"):
         case_id = None
         for tag in test.iter("tag"):
+            print(f"    DEBUG: tag={tag.text}")   # debug
             if tag.text and tag.text.startswith("Demo-"):
                 try:
                     case_id = int(tag.text.replace("Demo-", ""))
@@ -25,13 +25,15 @@ def extract_results(suite):
         status_elem = test.find("status")
         if case_id and status_elem is not None:
             status_text = status_elem.attrib["status"].upper()
-            status = 1 if status_text == "PASS" else 2  # 1=passed, 2=failed (Qase API)
+            status = 1 if status_text == "PASS" else 2
             results.append({
                 "case_id": case_id,
                 "status": status,
                 "comment": f"Executed test: {test.attrib['name']}"
             })
+            print(f"  DEBUG: Found test '{test.attrib['name']}' with case_id={case_id} status={status_text}")
     for child_suite in suite.findall("suite"):
+        print(f"DEBUG: Entering child suite '{child_suite.attrib.get('name')}'") # debug
         results.extend(extract_results(child_suite))
     return results
 
@@ -44,10 +46,23 @@ if not os.path.exists(xml_path):
 tree = ET.parse(xml_path)
 root = tree.getroot()
 
-results = extract_results(root)
+# Find the *first* suite element (to support root structure)
+suite_elem = root.find("suite")
+if suite_elem is None:
+    print("❌ No <suite> element found in output.xml!")
+    exit(1)
+
+results = extract_results(suite_elem)
 
 if not results:
     print("❌ No valid results found in output.xml. Make sure tests have tags like Demo-101.")
+    print("DEBUG: Here are the tags we found in output.xml:")
+    # Show all tags found for debugging
+    for suite in root.iter("suite"):
+        for test in suite.findall("test"):
+            print(f"  Test: {test.attrib.get('name')}")
+            for tag in test.iter("tag"):
+                print(f"    Tag: {tag.text}")
     exit(1)
 
 print(f"✅ Found {len(results)} test results to upload to Qase.")

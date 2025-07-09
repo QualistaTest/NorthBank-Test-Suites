@@ -67,8 +67,12 @@ if not results:
 
 print(f"✅ Found {len(results)} test results to upload to Qase.")
 
-# Create test run
-run_data = {"title": "Robot Framework Jenkins Run"}
+# ✅ FIXED: Mark run as automated
+run_data = {
+    "title": "Robot Framework Jenkins Run",
+    "is_autotest": True
+}
+
 run_response = requests.post(f"{BASE_URL}/run/{QASE_PROJECT}", headers=HEADERS, json=run_data)
 if run_response.status_code != 200:
     print("❌ Failed to create test run:", run_response.status_code, run_response.text)
@@ -77,7 +81,6 @@ if run_response.status_code != 200:
 run_id = run_response.json()["result"]["id"]
 print(f"✅ Test run created: {run_id}")
 
-# ✅ FIXED: use "results", not "result"
 payload = {
     "results": results
 }

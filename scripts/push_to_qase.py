@@ -13,11 +13,11 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-# Status mapping from Robot Framework to Qase
+# Robot status to Qase integer codes
 STATUS_MAP = {
-    "PASS": "passed",
-    "FAIL": "failed",
-    "SKIP": "skipped"  # If applicable
+    "PASS": 1,     # Passed
+    "FAIL": 2,     # Failed
+    "SKIP": 3      # Optional: Skipped
 }
 
 def extract_results(suite):
@@ -34,13 +34,16 @@ def extract_results(suite):
         status_elem = test.find("status")
         if case_id and status_elem is not None:
             status_text = status_elem.attrib["status"].upper()
-            status = STATUS_MAP.get(status_text, "invalid")
+            status = STATUS_MAP.get(status_text)
+            if status is None:
+                print(f"⚠️ Unknown status '{status_text}' for test '{test.attrib['name']}', skipping...")
+                continue
             results.append({
                 "case_id": case_id,
                 "status": status,
                 "comment": f"Executed test: {test.attrib['name']}"
             })
-            print(f"  DEBUG: Found test '{test.attrib['name']}' with case_id={case_id} status={status}")
+            print(f"  DEBUG: Found test '{test.attrib['name']}' with case_id={case_id} status={status_text}")
     for child_suite in suite.findall("suite"):
         print(f"DEBUG: Entering child suite '{child_suite.attrib.get('name')}'")
         results.extend(extract_results(child_suite))
@@ -86,9 +89,9 @@ if run_response.status_code != 200:
 run_id = run_response.json()["result"]["id"]
 print(f"✅ Test run created: {run_id}")
 
-# ✅ Wrap results in 'results' key
+# Correct payload format for Qase
 payload = {
-    "result": results
+    "results": results
 }
 
 upload_response = requests.post(

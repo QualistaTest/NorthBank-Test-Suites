@@ -13,11 +13,10 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-# Robot status to Qase integer codes
 STATUS_MAP = {
-    "PASS": 1,     # Passed
-    "FAIL": 2,     # Failed
-    "SKIP": 3      # Optional: Skipped
+    "PASS": 1,
+    "FAIL": 2,
+    "SKIP": 3
 }
 
 def extract_results(suite):
@@ -35,8 +34,7 @@ def extract_results(suite):
         if case_id and status_elem is not None:
             status_text = status_elem.attrib["status"].upper()
             status = STATUS_MAP.get(status_text)
-            if status is None:
-                print(f"⚠️ Unknown status '{status_text}' for test '{test.attrib['name']}', skipping...")
+            if not status:
                 continue
             results.append({
                 "case_id": case_id,
@@ -44,12 +42,12 @@ def extract_results(suite):
                 "comment": f"Executed test: {test.attrib['name']}"
             })
             print(f"  DEBUG: Found test '{test.attrib['name']}' with case_id={case_id} status={status_text}")
-    for child_suite in suite.findall("suite"):
-        print(f"DEBUG: Entering child suite '{child_suite.attrib.get('name')}'")
-        results.extend(extract_results(child_suite))
+    for child in suite.findall("suite"):
+        print(f"DEBUG: Entering child suite '{child.attrib.get('name')}'")
+        results.extend(extract_results(child))
     return results
 
-# Parse Robot Framework's output.xml
+# Load and parse Robot output
 xml_path = "results/output.xml"
 if not os.path.exists(xml_path):
     print(f"❌ File not found: {xml_path}")
@@ -57,30 +55,20 @@ if not os.path.exists(xml_path):
 
 tree = ET.parse(xml_path)
 root = tree.getroot()
-
 suite_elem = root.find("suite")
 if suite_elem is None:
-    print("❌ No <suite> element found in output.xml!")
+    print("❌ No <suite> element found!")
     exit(1)
 
 results = extract_results(suite_elem)
-
 if not results:
-    print("❌ No valid results found in output.xml. Make sure tests have tags like Demo-XXX.")
-    print("DEBUG: Here are the tags we found in output.xml:")
-    for suite in root.iter("suite"):
-        for test in suite.findall("test"):
-            print(f"  Test: {test.attrib.get('name')}")
-            for tag in test.iter("tag"):
-                print(f"    Tag: {tag.text}")
+    print("❌ No test results found!")
     exit(1)
 
 print(f"✅ Found {len(results)} test results to upload to Qase.")
 
-# Create a test run in Qase
-run_data = {
-    "title": "Robot Framework Jenkins Run"
-}
+# Create test run
+run_data = {"title": "Robot Framework Jenkins Run"}
 run_response = requests.post(f"{BASE_URL}/run/{QASE_PROJECT}", headers=HEADERS, json=run_data)
 if run_response.status_code != 200:
     print("❌ Failed to create test run:", run_response.status_code, run_response.text)
@@ -89,7 +77,7 @@ if run_response.status_code != 200:
 run_id = run_response.json()["result"]["id"]
 print(f"✅ Test run created: {run_id}")
 
-# Correct payload format for Qase
+# ✅ FIXED: use "results", not "result"
 payload = {
     "results": results
 }

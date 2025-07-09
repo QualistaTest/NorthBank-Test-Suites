@@ -1,6 +1,7 @@
 import os
 import requests
 import xml.etree.ElementTree as ET
+import json
 
 QASE_PROJECT = os.getenv("QASE_PROJECT_CODE", "Demo")
 QASE_API_TOKEN = os.getenv("QASE_API_TOKEN", "dad03e7a8bc5d9b5dfef3c4a983b9e0a60a2cc4071ead1f7afd149f0822d12af")
@@ -16,7 +17,7 @@ def extract_results(suite):
     for test in suite.findall("test"):
         case_id = None
         for tag in test.iter("tag"):
-            print(f"    DEBUG: tag={tag.text}")   # debug
+            print(f"    DEBUG: tag={tag.text}")
             if tag.text and tag.text.startswith("Demo-"):
                 try:
                     case_id = int(tag.text.replace("Demo-", ""))
@@ -33,7 +34,7 @@ def extract_results(suite):
             })
             print(f"  DEBUG: Found test '{test.attrib['name']}' with case_id={case_id} status={status_text}")
     for child_suite in suite.findall("suite"):
-        print(f"DEBUG: Entering child suite '{child_suite.attrib.get('name')}'") # debug
+        print(f"DEBUG: Entering child suite '{child_suite.attrib.get('name')}'")
         results.extend(extract_results(child_suite))
     return results
 
@@ -46,7 +47,6 @@ if not os.path.exists(xml_path):
 tree = ET.parse(xml_path)
 root = tree.getroot()
 
-# Find the *first* suite element (to support root structure)
 suite_elem = root.find("suite")
 if suite_elem is None:
     print("❌ No <suite> element found in output.xml!")
@@ -57,7 +57,6 @@ results = extract_results(suite_elem)
 if not results:
     print("❌ No valid results found in output.xml. Make sure tests have tags like Demo-101.")
     print("DEBUG: Here are the tags we found in output.xml:")
-    # Show all tags found for debugging
     for suite in root.iter("suite"):
         for test in suite.findall("test"):
             print(f"  Test: {test.attrib.get('name')}")
@@ -79,13 +78,16 @@ if run_response.status_code != 200:
 run_id = run_response.json()["result"]["id"]
 print(f"✅ Test run created: {run_id}")
 
-# Upload parsed test results
+# ✅ Wrap results in 'results' key
 payload = {
     "results": results
 }
+
 upload_response = requests.post(f"{BASE_URL}/result/{QASE_PROJECT}/{run_id}", headers=HEADERS, json=payload)
 
 if upload_response.status_code == 200:
     print("✅ Results uploaded successfully!")
 else:
     print("❌ Failed to upload results:", upload_response.status_code, upload_response.text)
+    print("📦 Payload that caused the error:")
+    print(json.dumps(payload, indent=2))

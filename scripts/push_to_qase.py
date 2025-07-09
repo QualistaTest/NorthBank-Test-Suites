@@ -14,9 +14,9 @@ HEADERS = {
 }
 
 STATUS_MAP = {
-    "PASS": 1,
-    "FAIL": 2,
-    "SKIP": 3
+    "PASS": "passed",
+    "FAIL": "failed",
+    "SKIP": "skipped"
 }
 
 def extract_results(suite):

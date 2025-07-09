@@ -63,7 +63,7 @@ if suite_elem is None:
 results = extract_results(suite_elem)
 
 if not results:
-    print("❌ No valid results found in output.xml. Make sure tests have tags like Demo-101.")
+    print("❌ No valid results found in output.xml. Make sure tests have tags like Demo-XXX.")
     print("DEBUG: Here are the tags we found in output.xml:")
     for suite in root.iter("suite"):
         for test in suite.findall("test"):
@@ -86,12 +86,16 @@ if run_response.status_code != 200:
 run_id = run_response.json()["result"]["id"]
 print(f"✅ Test run created: {run_id}")
 
-# Upload results to Qase
+# ✅ Wrap results in 'results' key
 payload = {
-    "results": results
+    "result": results
 }
 
-upload_response = requests.post(f"{BASE_URL}/result/{QASE_PROJECT}/{run_id}", headers=HEADERS, json=payload)
+upload_response = requests.post(
+    f"{BASE_URL}/result/{QASE_PROJECT}/{run_id}",
+    headers=HEADERS,
+    json=payload
+)
 
 if upload_response.status_code == 200:
     print("✅ Results uploaded successfully!")

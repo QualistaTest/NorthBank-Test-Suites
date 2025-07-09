@@ -3,6 +3,7 @@ import requests
 import xml.etree.ElementTree as ET
 import json
 
+# Config
 QASE_PROJECT = os.getenv("QASE_PROJECT_CODE", "Demo")
 QASE_API_TOKEN = os.getenv("QASE_API_TOKEN", "dad03e7a8bc5d9b5dfef3c4a983b9e0a60a2cc4071ead1f7afd149f0822d12af")
 BASE_URL = "https://api.qase.io/v1"
@@ -10,6 +11,13 @@ BASE_URL = "https://api.qase.io/v1"
 HEADERS = {
     "Token": QASE_API_TOKEN,
     "Content-Type": "application/json"
+}
+
+# Status mapping from Robot Framework to Qase
+STATUS_MAP = {
+    "PASS": "passed",
+    "FAIL": "failed",
+    "SKIP": "skipped"  # If applicable
 }
 
 def extract_results(suite):
@@ -26,13 +34,13 @@ def extract_results(suite):
         status_elem = test.find("status")
         if case_id and status_elem is not None:
             status_text = status_elem.attrib["status"].upper()
-            status = 1 if status_text == "PASS" else 2
+            status = STATUS_MAP.get(status_text, "invalid")
             results.append({
                 "case_id": case_id,
                 "status": status,
                 "comment": f"Executed test: {test.attrib['name']}"
             })
-            print(f"  DEBUG: Found test '{test.attrib['name']}' with case_id={case_id} status={status_text}")
+            print(f"  DEBUG: Found test '{test.attrib['name']}' with case_id={case_id} status={status}")
     for child_suite in suite.findall("suite"):
         print(f"DEBUG: Entering child suite '{child_suite.attrib.get('name')}'")
         results.extend(extract_results(child_suite))
@@ -78,7 +86,7 @@ if run_response.status_code != 200:
 run_id = run_response.json()["result"]["id"]
 print(f"✅ Test run created: {run_id}")
 
-# ✅ Wrap results in 'results' key
+# Upload results to Qase
 payload = {
     "results": results
 }

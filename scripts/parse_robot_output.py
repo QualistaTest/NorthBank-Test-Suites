@@ -1,4 +1,3 @@
-# parse_robot_output.py
 import xml.etree.ElementTree as ET
 import sys
 import os

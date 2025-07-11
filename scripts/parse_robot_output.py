@@ -1,3 +1,4 @@
+# parse_robot_output.py
 import xml.etree.ElementTree as ET
 import sys
 import os
@@ -12,14 +13,20 @@ tree = ET.parse(path)
 tests = tree.findall(".//test")
 
 total = len(tests)
-passed = sum(1 for t in tests if t.attrib.get('status') == 'PASS')
-failed = sum(1 for t in tests if t.attrib.get('status') == 'FAIL')
-skipped = sum(1 for t in tests if t.attrib.get('status') == 'SKIP')
+passed = failed = skipped = 0
 
-if total == 0:
-    percent = 0
-else:
-    percent = round((passed / total) * 100, 2)
+for test in tests:
+    status_elem = test.find("status")
+    if status_elem is not None:
+        status = status_elem.attrib.get("status", "")
+        if status == "PASS":
+            passed += 1
+        elif status == "FAIL":
+            failed += 1
+        elif status == "SKIP":
+            skipped += 1
+
+percent = round((passed / total) * 100, 2) if total > 0 else 0
 
 print(f"TOTAL={total}")
 print(f"PASSED={passed}")

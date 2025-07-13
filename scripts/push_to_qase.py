@@ -5,7 +5,7 @@ import json
 
 # Config
 QASE_PROJECT = os.getenv("QASE_PROJECT_CODE", "Demo")
-QASE_API_TOKEN = os.getenv("QASE_API_TOKEN", "your_qase_api_token_here")  # Replace if not using Jenkins credentials
+QASE_API_TOKEN = os.getenv("QASE_API_TOKEN", "dad03e7a8bc5d9b5dfef3c4a983b9e0a60a2cc4071ead1f7afd149f0822d12af")  # Replace if not using Jenkins credentials
 BASE_URL = "https://api.qase.io/v1"
 QASE_SUMMARY_PATH = "results/qase_summary.json"
 

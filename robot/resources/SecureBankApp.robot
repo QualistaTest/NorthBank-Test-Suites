@@ -19,6 +19,7 @@ ${VALIDATION_TEXT}   Validation failed. Please check your credentials and try ag
 
 *** Keywords ***
 Launch App And Login Page
+    [Tags]    
     ${options}=    Evaluate    sys.modules['selenium.webdriver'].ChromeOptions()    modules=sys, selenium.webdriver
     Call Method    ${options}    add_argument    --headless
     Call Method    ${options}    add_argument    --no-sandbox

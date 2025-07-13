@@ -2,12 +2,13 @@
 Library    SeleniumLibrary
 Resource   ../resources/SecureBankApp.robot
 
-# Suite Setup     Launch App And Login Page
-# Suite Teardown  Close Browser
+Suite Setup     Launch App And Login Page
+Suite Teardown  Close Browser
+
 # Test Setup      Maximize Browser Window
-Suite Teardown     Close Browser
-Test Setup         Launch App And Login Page
-Test Teardown      Close Browser  # Optional, depends on how isolated you want each test 
+# Suite Teardown     Close Browser
+# Test Setup         Launch App And Login Page
+# Test Teardown      Close Browser  # Optional, depends on how isolated you want each test 
 
 *** Test Cases ***
 

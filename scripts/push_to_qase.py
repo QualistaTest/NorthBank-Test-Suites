@@ -5,9 +5,8 @@ import json
 
 # Config
 QASE_PROJECT = os.getenv("QASE_PROJECT_CODE", "Demo")
-QASE_API_TOKEN = os.getenv("QASE_API_TOKEN", "dad03e7a8bc5d9b5dfef3c4a983b9e0a60a2cc4071ead1f7afd149f0822d12af")  # Replace if not using Jenkins credentials
+QASE_API_TOKEN = os.getenv("QASE_API_TOKEN", "dad03e7a8bc5d9b5dfef3c4a983b9e0a60a2cc4071ead1f7afd149f0822d12af")
 BASE_URL = "https://api.qase.io/v1"
-QASE_SUMMARY_PATH = "results/qase_summary.json"
 
 HEADERS = {
     "Token": QASE_API_TOKEN,
@@ -21,17 +20,14 @@ STATUS_MAP = {
 }
 
 def extract_results(suite):
-    grouped_results = {}  # Key = Jira ID, value = list of test results
-
+    results = []
     for test in suite.findall("test"):
-        jira_key = None
         case_id = None
         for tag in test.iter("tag"):
             print(f"    DEBUG: tag={tag.text}")
             if tag.text and tag.text.startswith("Demo-"):
                 try:
                     case_id = int(tag.text.replace("Demo-", ""))
-                    jira_key = f"DEMO-{case_id}"
                 except ValueError:
                     continue
 
@@ -40,24 +36,19 @@ def extract_results(suite):
             status_text = status_elem.attrib["status"].upper()
             status = STATUS_MAP.get(status_text)
             if not status:
+                print(f"⚠️  Skipping test '{test.attrib['name']}' with unknown status: {status_text}")
                 continue
-            test_result = {
+            results.append({
                 "case_id": case_id,
                 "status": status,
                 "comment": f"Executed test: {test.attrib['name']}"
-            }
-            print(f"  DEBUG: Found test '{test.attrib['name']}' with case_id={case_id} status={status_text}")
-            if jira_key:
-                grouped_results.setdefault(jira_key, []).append(test_result)
+            })
+            print(f"✅ Collected: {test.attrib['name']} → Case ID {case_id} → Status {status_text}")
 
     for child_suite in suite.findall("suite"):
-        print(f"DEBUG: Entering child suite '{child_suite.attrib.get('name')}'")
-        child_results = extract_results(child_suite)
-        for issue_key, tests in child_results.items():
-            grouped_results.setdefault(issue_key, []).extend(tests)
-
-    return grouped_results
-
+        print(f"📂 Entering suite: {child_suite.attrib.get('name')}")
+        results.extend(extract_results(child_suite))
+    return results
 
 def main():
     xml_path = "results/output.xml"
@@ -65,6 +56,7 @@ def main():
         print(f"❌ File not found: {xml_path}")
         exit(1)
 
+    print("📄 Parsing Robot Framework results...")
     tree = ET.parse(xml_path)
     root = tree.getroot()
     suite_elem = root.find("suite")
@@ -73,49 +65,59 @@ def main():
         print("❌ No <suite> element found!")
         exit(1)
 
-    grouped_results = extract_results(suite_elem)
-    if not grouped_results:
-        print("❌ No test results found!")
+    results = extract_results(suite_elem)
+    if not results:
+        print("❌ No test results found to upload!")
         exit(1)
 
-    total = sum(len(tests) for tests in grouped_results.values())
-    print(f"✅ Found {total} test results to upload to Qase.")
+    print(f"📊 Total test cases to push: {len(results)}")
 
     # Create test run
     run_data = {
         "title": "Robot Framework Jenkins Run",
         "is_autotest": True
     }
+    print("🚀 Creating test run in Qase...")
     run_response = requests.post(f"{BASE_URL}/run/{QASE_PROJECT}", headers=HEADERS, json=run_data)
+    print(f"📡 Qase Run Creation Response: {run_response.status_code}")
     if run_response.status_code != 200:
         print("❌ Failed to create test run:", run_response.status_code, run_response.text)
         exit(1)
 
     run_id = run_response.json()["result"]["id"]
-    print(f"✅ Test run created: {run_id}")
+    print(f"✅ Test run ID: {run_id}")
 
-    # Upload results
-    all_results = []
-    for tests in grouped_results.values():
-        all_results.extend(tests)
-
-    payload = { "results": all_results }
+    # Upload results via bulk endpoint
+    payload = {
+        "results": results
+    }
     upload_url = f"{BASE_URL}/result/{QASE_PROJECT}/{run_id}/bulk"
+    print("⬆️ Uploading test results to Qase...")
+
     upload_response = requests.post(upload_url, headers=HEADERS, json=payload)
+    print(f"📡 Upload Response Code: {upload_response.status_code}")
 
     if upload_response.status_code == 200:
         print("✅ Results uploaded successfully via bulk endpoint!")
     else:
         print("❌ Failed to upload results:", upload_response.status_code, upload_response.text)
-        print("📦 Payload that caused the error:")
+        print("📦 Payload sent:")
         print(json.dumps(payload, indent=2))
 
-    # Save summary for Jira comment script
-    os.makedirs("results", exist_ok=True)
-    with open(QASE_SUMMARY_PATH, "w", encoding="utf-8") as f:
-        json.dump(grouped_results, f, indent=2)
-    print(f"📄 Saved summary to: {QASE_SUMMARY_PATH}")
-
+    # Optional: Save summary file
+    summary_path = "results/qase_summary.json"
+    try:
+        with open(summary_path, "w", encoding="utf-8") as f:
+            json.dump({
+                "run_id": run_id,
+                "total": len(results),
+                "passed": sum(1 for r in results if r["status"] == "passed"),
+                "failed": sum(1 for r in results if r["status"] == "failed"),
+                "results": results
+            }, f, indent=2)
+        print(f"📄 Saved summary to: {summary_path}")
+    except Exception as e:
+        print(f"⚠️  Could not save summary file: {e}")
 
 if __name__ == "__main__":
     main()

@@ -3,10 +3,17 @@ import requests
 import json
 from collections import defaultdict
 
+<<<<<<< HEAD
 # ENV VARS REQUIRED:
 JIRA_API_TOKEN = os.getenv("JIRA_API_TOKEN")
 JIRA_EMAIL = os.getenv("JIRA_EMAIL")
 JIRA_BASE_URL = os.getenv("JIRA_BASE_URL")
+=======
+JIRA_API_TOKEN = os.getenv("JIRA_API_TOKEN")
+JIRA_EMAIL = os.getenv("JIRA_EMAIL")
+JIRA_BASE_URL = os.getenv("JIRA_BASE_URL")
+
+>>>>>>> 2f86ae0 (git push origin dev --forceJira comments fix)
 QASE_SUMMARY_PATH = os.getenv("QASE_SUMMARY_PATH", "results/qase_summary.json")
 
 def read_qase_summary(filepath):
@@ -25,24 +32,25 @@ def extract_jira_issues(summary_data):
     issues = defaultdict(list)
     test_results = summary_data.get("results", [])
     print(f"🔍 Extracting Jira issue keys from {len(test_results)} test results...")
+
     for test in test_results:
-        comment = test.get("comment", "")
         case_id = test.get("case_id", "N/A")
         status = test.get("status", "unknown").capitalize()
+        name = test.get("name", "Unnamed Test")
+        tags = test.get("tags", [])
 
-        # Attempt to extract Jira issue key from the comment
         found_issue = False
-        for word in comment.split():
-            if word.startswith("DEMO-"):
-                issues[word].append({
-                    "title": comment,
+        for tag in tags:
+            if tag.startswith("DEMO-"):  # adjust pattern if needed
+                issues[tag].append({
+                    "title": name,
                     "status": status
                 })
-                print(f"✅ Found Jira key: {word} for case {case_id}")
+                print(f"✅ Found Jira key: {tag} for case {case_id}")
                 found_issue = True
                 break
         if not found_issue:
-            print(f"⚠️  No Jira issue key found in comment for case {case_id}")
+            print(f"⚠️  No Jira issue key found in tags for case {case_id}")
     return issues
 
 def post_comment_to_jira(issue_key, comment_body):

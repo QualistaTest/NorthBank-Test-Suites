@@ -21,13 +21,20 @@ STATUS_MAP = {
 
 # === Functions ===
 
-def extract_results(suite):
+def extract_results(suite, inherited_tags=None):
     results = []
+    if inherited_tags is None:
+        inherited_tags = []
+
+    suite_tags = inherited_tags + [t.text for t in suite.findall("tag") if t.text]
+    print(f"📂 Entering suite: {suite.attrib.get('name')} with tags: {suite_tags}")
+
     for test in suite.findall("test"):
         case_id = None
-        tags = [tag.text for tag in test.iter("tag") if tag.text]
+        tags = [t.text for t in test.iter("tag") if t.text]
+        combined_tags = list(set(tags + suite_tags))  # avoid duplicates
 
-        for tag in tags:
+        for tag in combined_tags:
             print(f"    DEBUG: tag={tag}")
             if tag.startswith("Demo-"):
                 try:
@@ -47,15 +54,15 @@ def extract_results(suite):
                 "case_id": case_id,
                 "status": status,
                 "comment": f"Executed test: {test.attrib['name']}",
-                "tags": tags,
-                "name": test.attrib['name']
+                "tags": combined_tags,
+                "name": test.attrib["name"]
             }
             results.append(result)
             print(f"✅ Collected: {test.attrib['name']} → Case ID {case_id} → Status {status_text}")
 
     for child_suite in suite.findall("suite"):
-        print(f"📂 Entering suite: {child_suite.attrib.get('name')}")
-        results.extend(extract_results(child_suite))
+        results.extend(extract_results(child_suite, suite_tags))
+
     return results
 
 

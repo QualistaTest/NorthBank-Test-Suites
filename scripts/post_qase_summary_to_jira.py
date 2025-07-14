@@ -3,17 +3,11 @@ import requests
 import json
 from collections import defaultdict
 
-<<<<<<< HEAD
 # ENV VARS REQUIRED:
 JIRA_API_TOKEN = os.getenv("JIRA_API_TOKEN")
 JIRA_EMAIL = os.getenv("JIRA_EMAIL")
 JIRA_BASE_URL = os.getenv("JIRA_BASE_URL")
-=======
-JIRA_API_TOKEN = os.getenv("JIRA_API_TOKEN")
-JIRA_EMAIL = os.getenv("JIRA_EMAIL")
-JIRA_BASE_URL = os.getenv("JIRA_BASE_URL")
 
->>>>>>> 2f86ae0 (git push origin dev --forceJira comments fix)
 QASE_SUMMARY_PATH = os.getenv("QASE_SUMMARY_PATH", "results/qase_summary.json")
 
 def read_qase_summary(filepath):

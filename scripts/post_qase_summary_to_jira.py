@@ -80,8 +80,9 @@ def main():
         return
 
     for issue_key, tests in issues.items():
-        summary_lines = [f"*{t['title']}* – {t['status']}" for t in tests]
-        comment = "✅ *Qase Test Run Summary:*\n" + "\n".join(summary_lines)
+        summary_lines = [f"- {t['title']} – {t['status']}" for t in tests]
+        comment = "Qase Test Run Summary:\n" + "\n".join(summary_lines)
+        print(f"📩 Comment content for {issue_key}:\n{comment}")
         post_comment_to_jira(issue_key, comment)
 
 if __name__ == "__main__":

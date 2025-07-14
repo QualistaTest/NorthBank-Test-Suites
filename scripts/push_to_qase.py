@@ -3,7 +3,7 @@ import requests
 import xml.etree.ElementTree as ET
 import json
 
-# Config
+# === Configuration ===
 QASE_PROJECT = os.getenv("QASE_PROJECT_CODE", "Demo")
 QASE_API_TOKEN = os.getenv("QASE_API_TOKEN", "dad03e7a8bc5d9b5dfef3c4a983b9e0a60a2cc4071ead1f7afd149f0822d12af")
 BASE_URL = "https://api.qase.io/v1"
@@ -19,15 +19,20 @@ STATUS_MAP = {
     "SKIP": "skipped"
 }
 
+# === Functions ===
+
 def extract_results(suite):
     results = []
     for test in suite.findall("test"):
         case_id = None
-        for tag in test.iter("tag"):
-            print(f"    DEBUG: tag={tag.text}")
-            if tag.text and tag.text.startswith("Demo-"):
+        tags = [tag.text for tag in test.iter("tag") if tag.text]
+
+        for tag in tags:
+            print(f"    DEBUG: tag={tag}")
+            if tag.startswith("Demo-"):
                 try:
-                    case_id = int(tag.text.replace("Demo-", ""))
+                    case_id = int(tag.replace("Demo-", ""))
+                    break
                 except ValueError:
                     continue
 
@@ -38,17 +43,21 @@ def extract_results(suite):
             if not status:
                 print(f"⚠️  Skipping test '{test.attrib['name']}' with unknown status: {status_text}")
                 continue
-            results.append({
+            result = {
                 "case_id": case_id,
                 "status": status,
-                "comment": f"Executed test: {test.attrib['name']}"
-            })
+                "comment": f"Executed test: {test.attrib['name']}",
+                "tags": tags,
+                "name": test.attrib['name']
+            }
+            results.append(result)
             print(f"✅ Collected: {test.attrib['name']} → Case ID {case_id} → Status {status_text}")
 
     for child_suite in suite.findall("suite"):
         print(f"📂 Entering suite: {child_suite.attrib.get('name')}")
         results.extend(extract_results(child_suite))
     return results
+
 
 def main():
     xml_path = "results/output.xml"
@@ -62,7 +71,7 @@ def main():
     suite_elem = root.find("suite")
 
     if suite_elem is None:
-        print("❌ No <suite> element found!")
+        print("❌ No <suite> element found in output.xml!")
         exit(1)
 
     results = extract_results(suite_elem)
@@ -72,7 +81,7 @@ def main():
 
     print(f"📊 Total test cases to push: {len(results)}")
 
-    # Create test run
+    # Create test run in Qase
     run_data = {
         "title": "Robot Framework Jenkins Run",
         "is_autotest": True
@@ -87,13 +96,19 @@ def main():
     run_id = run_response.json()["result"]["id"]
     print(f"✅ Test run ID: {run_id}")
 
-    # Upload results via bulk endpoint
+    # Upload test results
     payload = {
-        "results": results
+        "results": [
+            {
+                "case_id": r["case_id"],
+                "status": r["status"],
+                "comment": r["comment"]
+            } for r in results
+        ]
     }
+
     upload_url = f"{BASE_URL}/result/{QASE_PROJECT}/{run_id}/bulk"
     print("⬆️ Uploading test results to Qase...")
-
     upload_response = requests.post(upload_url, headers=HEADERS, json=payload)
     print(f"📡 Upload Response Code: {upload_response.status_code}")
 
@@ -104,7 +119,7 @@ def main():
         print("📦 Payload sent:")
         print(json.dumps(payload, indent=2))
 
-    # Optional: Save summary file
+    # Save detailed summary
     summary_path = "results/qase_summary.json"
     try:
         with open(summary_path, "w", encoding="utf-8") as f:
@@ -118,6 +133,7 @@ def main():
         print(f"📄 Saved summary to: {summary_path}")
     except Exception as e:
         print(f"⚠️  Could not save summary file: {e}")
+
 
 if __name__ == "__main__":
     main()

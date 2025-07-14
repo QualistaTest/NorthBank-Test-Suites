@@ -33,29 +33,58 @@ def extract_jira_issues(summary_data):
         name = test.get("name", "Unnamed Test")
         tags = test.get("tags", [])
 
-        found_issue = False
         for tag in tags:
-            if tag.startswith("DEMO-"):  # adjust pattern if needed
+            if tag.startswith("DEMO-"):
                 issues[tag].append({
                     "title": name,
                     "status": status
                 })
                 print(f"✅ Found Jira key: {tag} for case {case_id}")
-                found_issue = True
                 break
-        if not found_issue:
+        else:
             print(f"⚠️  No Jira issue key found in tags for case {case_id}")
     return issues
 
-def post_comment_to_jira(issue_key, comment_body):
+def build_adf_comment(test_items):
+    """Create ADF document for Jira comment"""
+    content = [
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Qase Test Run Summary:",
+                    "marks": [{"type": "strong"}]
+                }
+            ]
+        }
+    ]
+
+    for item in test_items:
+        content.append({
+            "type": "paragraph",
+            "content": [
+                {"type": "text", "text": f"- {item['title']} – {item['status']}"}
+            ]
+        })
+
+    return {
+        "body": {
+            "type": "doc",
+            "version": 1,
+            "content": content
+        }
+    }
+
+def post_comment_to_jira(issue_key, test_items):
     url = f"{JIRA_BASE_URL}/rest/api/3/issue/{issue_key}/comment"
     headers = {
         "Content-Type": "application/json"
     }
     auth = (JIRA_EMAIL, JIRA_API_TOKEN)
-    payload = {
-        "body": comment_body
-    }
+
+    payload = build_adf_comment(test_items)
+    print(f"📩 Comment payload for {issue_key}:\n{json.dumps(payload, indent=2)}")
 
     print(f"📝 Posting comment to Jira issue: {issue_key}")
     try:
@@ -79,11 +108,8 @@ def main():
         print("⚠️  No matching Jira issues found in test results.")
         return
 
-    for issue_key, tests in issues.items():
-        summary_lines = [f"- {t['title']} – {t['status']}" for t in tests]
-        comment = "Qase Test Run Summary:\n" + "\n".join(summary_lines)
-        print(f"📩 Comment content for {issue_key}:\n{comment}")
-        post_comment_to_jira(issue_key, comment)
+    for issue_key, test_items in issues.items():
+        post_comment_to_jira(issue_key, test_items)
 
 if __name__ == "__main__":
     main()

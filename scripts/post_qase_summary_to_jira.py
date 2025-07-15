@@ -11,6 +11,8 @@ JIRA_BASE_URL = os.getenv("JIRA_BASE_URL")
 QASE_PROJECT_CODE = os.getenv("QASE_PROJECT_CODE", "Demo")
 QASE_SUMMARY_PATH = os.getenv("QASE_SUMMARY_PATH", "results/qase_summary.json")
 HISTORY_DIR = "results/history"
+CONSOLIDATED_ISSUE = "DEMO-11"  # Hardcoded for now; make configurable if needed
+
 
 def read_qase_summary(filepath):
     print(f"📄 Reading Qase summary file from: {filepath}")
@@ -115,6 +117,53 @@ def post_comment_to_jira(issue_key, test_items, run_id):
     except Exception as e:
         print(f"❌ Exception while posting to Jira issue {issue_key}: {e}")
 
+def post_consolidated_summary(run_id):
+    def load_all_histories(directory):
+        trends = {}
+        for filename in os.listdir(directory):
+            if filename.endswith(".json"):
+                issue_key = filename.replace(".json", "")
+                path = os.path.join(directory, filename)
+                try:
+                    with open(path, "r", encoding="utf-8") as f:
+                        data = json.load(f).get("history", [])
+                        trends[issue_key] = data[-3:]
+                except Exception:
+                    continue
+        return trends
+
+    def build_consolidated_adf(run_id, trends):
+        run_link = f"https://app.qase.io/run/{QASE_PROJECT_CODE}/dashboard/{run_id}"
+        content = [
+            {"type": "paragraph", "content": [{"type": "text", "text": "🧾 Regression Suite Run Summary", "marks": [{"type": "strong"}]}]},
+            {"type": "paragraph", "content": [
+                {"type": "text", "text": "Run ID: "},
+                {"type": "text", "text": f"#{run_id}", "marks": [{"type": "link", "attrs": {"href": run_link}}]}
+            ]}
+        ]
+        for issue_key, history in sorted(trends.items()):
+            content.append({"type": "paragraph", "content": [{"type": "text", "text": f"🔹 {issue_key} (last 3 runs):", "marks": [{"type": "strong"}]}]})
+            for record in history:
+                ts = record["timestamp"][:19]
+                content.append({"type": "paragraph", "content": [{"type": "text", "text": f"{ts} — {record['passed']} passed / {record['failed']} failed"}]})
+        return {"body": {"type": "doc", "version": 1, "content": content}}
+
+    trends = load_all_histories(HISTORY_DIR)
+    payload = build_consolidated_adf(run_id, trends)
+    url = f"{JIRA_BASE_URL}/rest/api/3/issue/{CONSOLIDATED_ISSUE}/comment"
+    headers = {"Content-Type": "application/json"}
+    auth = (JIRA_EMAIL, JIRA_API_TOKEN)
+
+    print(f"📦 Posting consolidated summary to {CONSOLIDATED_ISSUE}...")
+    try:
+        response = requests.post(url, headers=headers, json=payload, auth=auth)
+        if response.status_code >= 300:
+            print(f"❌ Failed to post consolidated comment: {response.status_code} - {response.text}")
+        else:
+            print("✅ Consolidated comment posted successfully.")
+    except Exception as e:
+        print(f"❌ Exception while posting consolidated comment: {e}")
+
 def main():
     if not all([JIRA_API_TOKEN, JIRA_EMAIL, JIRA_BASE_URL]):
         print("❌ Missing Jira credentials or base URL in environment variables.")
@@ -133,6 +182,9 @@ def main():
 
     for issue_key, test_items in issues.items():
         post_comment_to_jira(issue_key, test_items, run_id)
+
+    post_consolidated_summary(run_id)
+
 
 if __name__ == "__main__":
     main()

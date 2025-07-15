@@ -4,46 +4,50 @@ import json
 from collections import defaultdict
 from datetime import datetime
 
-# Hardcoded for demo purposes
+# --- Config ---
+JIRA_API_TOKEN = os.getenv("JIRA_API_TOKEN")
+JIRA_EMAIL = os.getenv("JIRA_EMAIL")
+JIRA_BASE_URL = os.getenv("JIRA_BASE_URL")
 QASE_PROJECT_CODE = "Demo"
 QASE_SUMMARY_PATH = "results/qase_summary.json"
 HISTORY_DIR = "results/history"
 CONSOLIDATED_ISSUE = "DEMO-11"
-LOG_BASE_URL = "https://your-hosted-logs.example.com/results"  # Change this to your Jenkins or S3 URL
+ROBOT_REPORT_BASE = "http://20.84.40.165:8080/job/NorthBankRegression%20Dev/122/robot"
 
-JIRA_API_TOKEN = os.getenv("JIRA_API_TOKEN")
-JIRA_EMAIL = os.getenv("JIRA_EMAIL")
-JIRA_BASE_URL = os.getenv("JIRA_BASE_URL")
-
-
+# --- Load Qase JSON ---
 def read_qase_summary(filepath):
+    print(f"📄 Reading Qase summary file from: {filepath}")
+    if not os.path.exists(filepath):
+        print(f"❌ File not found: {filepath}")
+        exit(1)
     with open(filepath, "r", encoding="utf-8") as f:
         return json.load(f)
 
-
-def extract_jira_issues(summary_data):
-    issues = defaultdict(list)
+# --- Extract results grouped by suite (not just issue) ---
+def extract_suites(summary_data):
+    suites = defaultdict(lambda: {"issue": None, "tests": []})
     for test in summary_data.get("results", []):
-        name = test.get("name")
+        suite = test.get("suite", "Unknown Suite")
         status = test.get("status", "unknown").capitalize()
+        name = test.get("name", "Unnamed Test")
         tags = test.get("tags", [])
-        for tag in tags:
-            if tag.startswith("DEMO-"):
-                issues[tag].append({"title": name, "status": status})
-                break
-    return issues
+        issue_key = next((tag for tag in tags if tag.startswith("DEMO-")), None)
+        suites[suite]["tests"].append({"title": name, "status": status})
+        suites[suite]["issue"] = issue_key
+    return suites
 
-
-def update_history(issue_key, test_items):
+# --- Store per-suite history locally ---
+def update_history(suite, tests):
     os.makedirs(HISTORY_DIR, exist_ok=True)
-    path = os.path.join(HISTORY_DIR, f"{issue_key}.json")
-    passed = sum(1 for t in test_items if t["status"] == "Passed")
-    failed = sum(1 for t in test_items if t["status"] == "Failed")
+    path = os.path.join(HISTORY_DIR, f"{suite}.json")
+    passed = sum(1 for t in tests if t["status"] == "Passed")
+    failed = sum(1 for t in tests if t["status"] == "Failed")
+    total = len(tests)
     record = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now().isoformat(),
         "passed": passed,
         "failed": failed,
-        "total": len(test_items)
+        "total": total
     }
     history = []
     if os.path.exists(path):
@@ -54,136 +58,105 @@ def update_history(issue_key, test_items):
         json.dump({"history": history[-20:]}, f, indent=2)
     return history[-3:]
 
-
-def build_adf_comment(test_items, run_id, issue_key):
+# --- Build ADF (Atlassian Document Format) comment ---
+def build_adf_comment(run_id, suite_name, tests, history, include_report_link=False):
     run_link = f"https://app.qase.io/run/{QASE_PROJECT_CODE}/dashboard/{run_id}"
-    log_url = f"{LOG_BASE_URL}/log.html"
-    report_url = f"{LOG_BASE_URL}/report.html"
-    history = update_history(issue_key, test_items)
+    report_link = f"{ROBOT_REPORT_BASE}/report.html"
+    log_link = f"{ROBOT_REPORT_BASE}/log.html"
 
     content = [
-        {"type": "paragraph", "content": [{"type": "text", "text": "Qase Test Run Summary:", "marks": [{"type": "strong"}]}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": f"{suite_name} — Qase Run Summary", "marks": [{"type": "strong"}]}]},
         {"type": "paragraph", "content": [
             {"type": "text", "text": "Run ID: "},
             {"type": "text", "text": f"#{run_id}", "marks": [{"type": "link", "attrs": {"href": run_link}}]}
-        ]},
-        {"type": "paragraph", "content": [
-            {"type": "text", "text": "📄 "},
-            {"type": "text", "text": "Log", "marks": [{"type": "link", "attrs": {"href": log_url}}]},
-            {"type": "text", "text": " | "},
-            {"type": "text", "text": "Report", "marks": [{"type": "link", "attrs": {"href": report_url}}]}
         ]}
     ]
 
     grouped = defaultdict(list)
-    for item in test_items:
-        grouped[item["status"]].append(item)
+    for t in tests:
+        grouped[t["status"]].append(t["title"])
 
     if grouped.get("Passed"):
         content.append({"type": "paragraph", "content": [{"type": "text", "text": "✅ Passed:", "marks": [{"type": "strong"}]}]})
-        for test in grouped["Passed"]:
-            content.append({"type": "paragraph", "content": [{"type": "text", "text": f"- {test['title']}"}]})
+        for name in grouped["Passed"]:
+            content.append({"type": "paragraph", "content": [{"type": "text", "text": f"✔ {name}", "marks": [{"type": "code"}]}]})
 
     if grouped.get("Failed"):
         content.append({"type": "paragraph", "content": [{"type": "text", "text": "❌ Failed:", "marks": [{"type": "strong"}]}]})
-        for test in grouped["Failed"]:
-            content.append({"type": "paragraph", "content": [{"type": "text", "text": f"- {test['title']}"}]})
+        for name in grouped["Failed"]:
+            content.append({"type": "paragraph", "content": [{"type": "text", "text": f"✘ {name}", "marks": [{"type": "code"}]}]})
 
     if history:
-        content.append({"type": "paragraph", "content": [{"type": "text", "text": "📊 Last 3 runs:", "marks": [{"type": "strong"}]}]})
+        pass_rate = int(100 * sum(h["passed"] for h in history) / max(1, sum(h["total"] for h in history)))
+        avg_failed = round(sum(h["failed"] for h in history) / len(history), 1)
+        content.append({"type": "paragraph", "content": [
+            {"type": "text", "text": f"📊 Last {len(history)} runs — {pass_rate}% pass rate, avg {avg_failed} fails", "marks": [{"type": "strong"}]}
+        ]})
         for h in history:
-            content.append({"type": "paragraph", "content": [
-                {"type": "text", "text": f"{h['timestamp'][:19]} — {h['passed']} passed / {h['failed']} failed"}
-            ]})
+            result_line = f"{h['timestamp'][:19]} — {h['passed']} passed / {h['failed']} failed"
+            content.append({"type": "paragraph", "content": [{"type": "text", "text": result_line}]})
+
+    if include_report_link:
+        content.append({"type": "paragraph", "content": [
+            {"type": "text", "text": "🔗 "},
+            {"type": "text", "text": "Robot Report", "marks": [{"type": "link", "attrs": {"href": report_link}}]},
+            {"type": "text", "text": " | "},
+            {"type": "text", "text": "Robot Log", "marks": [{"type": "link", "attrs": {"href": log_link}}]}
+        ]})
 
     return {"body": {"type": "doc", "version": 1, "content": content}}
 
-
-def post_or_update_jira_comment(issue_key, comment_payload):
+# --- Post/update a comment to Jira ---
+def post_comment(issue_key, adf_body, replace_existing=False):
     url = f"{JIRA_BASE_URL}/rest/api/3/issue/{issue_key}/comment"
     headers = {"Content-Type": "application/json"}
     auth = (JIRA_EMAIL, JIRA_API_TOKEN)
 
-    # Fetch existing comments to replace old one
-    response = requests.get(url, headers=headers, auth=auth)
-    comment_id = None
-    if response.status_code == 200:
-        for comment in response.json().get("comments", []):
-            body = comment.get("body", {})
-            if isinstance(body, dict) and "content" in body:
-                for block in body["content"]:
-                    if block["type"] == "paragraph" and "Qase Test Run Summary" in json.dumps(block):
-                        comment_id = comment["id"]
-                        break
+    # Replace existing comment logic
+    if replace_existing:
+        comments_url = f"{url}?orderBy=-created"
+        resp = requests.get(comments_url, headers=headers, auth=auth)
+        if resp.status_code == 200:
+            for c in resp.json().get("comments", []):
+                if "Qase Run Summary" in json.dumps(c):
+                    comment_id = c["id"]
+                    put_url = f"{url}/{comment_id}"
+                    res = requests.put(put_url, headers=headers, auth=auth, json=adf_body)
+                    print(f"🔄 Updating existing comment on {issue_key}")
+                    return
+    # Default: create new comment
+    res = requests.post(url, headers=headers, auth=auth, json=adf_body)
+    print(f"🆕 Posting new comment to {issue_key}")
 
-    if comment_id:
-        print(f"🔄 Updating existing comment on {issue_key}")
-        url += f"/{comment_id}"
-        response = requests.put(url, headers=headers, json=comment_payload, auth=auth)
-    else:
-        print(f"🆕 Posting new comment to {issue_key}")
-        response = requests.post(url, headers=headers, json=comment_payload, auth=auth)
-
-    if response.status_code >= 300:
-        print(f"❌ Failed to post/update comment: {response.status_code} - {response.text}")
-
-
-def post_consolidated_summary(run_id):
-    def load_all_histories(directory):
-        trends = {}
-        for fname in os.listdir(directory):
-            if fname.endswith(".json"):
-                issue_key = fname.replace(".json", "")
-                with open(os.path.join(directory, fname), "r", encoding="utf-8") as f:
-                    trends[issue_key] = json.load(f).get("history", [])[-3:]
-        return trends
-
-    def build_adf_consolidated(run_id, trends):
-        run_link = f"https://app.qase.io/run/{QASE_PROJECT_CODE}/dashboard/{run_id}"
-        log_url = f"{LOG_BASE_URL}/log.html"
-        report_url = f"{LOG_BASE_URL}/report.html"
-        content = [
-            {"type": "paragraph", "content": [{"type": "text", "text": "🧾 Regression Suite Summary", "marks": [{"type": "strong"}]}]},
-            {"type": "paragraph", "content": [
-                {"type": "text", "text": "Run ID: "},
-                {"type": "text", "text": f"#{run_id}", "marks": [{"type": "link", "attrs": {"href": run_link}}]}
-            ]},
-            {"type": "paragraph", "content": [
-                {"type": "text", "text": "📄 "},
-                {"type": "text", "text": "Log", "marks": [{"type": "link", "attrs": {"href": log_url}}]},
-                {"type": "text", "text": " | "},
-                {"type": "text", "text": "Report", "marks": [{"type": "link", "attrs": {"href": report_url}}]}
-            ]}
-        ]
-        for issue_key, history in trends.items():
-            if not history:
-                continue
-            avg_fail = sum(h["failed"] for h in history) / len(history)
-            avg_total = sum(h["total"] for h in history) / len(history)
-            avg_pass_rate = (1 - avg_fail / avg_total) * 100 if avg_total else 0
-            content.append({"type": "paragraph", "content": [{"type": "text", "text": f"🔹 {issue_key} — {avg_pass_rate:.0f}% pass rate, avg {avg_fail:.1f} fails", "marks": [{"type": "strong"}]}]})
-            for h in history:
-                content.append({"type": "paragraph", "content": [{"type": "text", "text": f"{h['timestamp'][:19]} — {h['passed']} passed / {h['failed']} failed"}]})
-        return {"body": {"type": "doc", "version": 1, "content": content}}
-
-    trends = load_all_histories(HISTORY_DIR)
-    payload = build_adf_consolidated(run_id, trends)
-    post_or_update_jira_comment(CONSOLIDATED_ISSUE, payload)
-
-
+# --- MAIN ---
 def main():
     summary = read_qase_summary(QASE_SUMMARY_PATH)
     run_id = summary.get("run_id")
     if not run_id:
-        print("❌ No run ID in summary!")
+        print("❌ No run_id found in summary.")
         return
 
-    issues = extract_jira_issues(summary)
-    for issue_key, tests in issues.items():
-        payload = build_adf_comment(tests, run_id, issue_key)
-        post_or_update_jira_comment(issue_key, payload)
+    suites = extract_suites(summary)
+    consolidated_data = {}
 
-    post_consolidated_summary(run_id)
+    for suite_name, info in suites.items():
+        issue = info["issue"]
+        tests = info["tests"]
+        if not issue:
+            continue
+        history = update_history(suite_name, tests)
+        adf = build_adf_comment(run_id, suite_name, tests, history, include_report_link=False)
+        post_comment(issue, adf, replace_existing=True)
+        consolidated_data[suite_name] = {"tests": tests, "history": history}
+
+    # Consolidated to DEMO-11
+    consolidated_adf = {"body": {"type": "doc", "version": 1, "content": []}}
+    for suite, data in consolidated_data.items():
+        section = build_adf_comment(run_id, suite, data["tests"], data["history"], include_report_link=True)
+        consolidated_adf["body"]["content"].extend(section["body"]["content"])
+        consolidated_adf["body"]["content"].append({"type": "paragraph", "content": []})  # spacer
+
+    post_comment(CONSOLIDATED_ISSUE, consolidated_adf, replace_existing=False)
 
 
 if __name__ == "__main__":

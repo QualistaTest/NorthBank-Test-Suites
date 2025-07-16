@@ -1,4 +1,3 @@
-update the full script again: 
 import os
 import requests
 import json

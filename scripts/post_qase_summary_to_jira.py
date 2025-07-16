@@ -139,39 +139,32 @@ def post_consolidated_summary(run_id):
 
     def build_consolidated_adf(run_id, trends):
         run_link = f"https://app.qase.io/run/{QASE_PROJECT_CODE}/dashboard/{run_id}"
-        zip_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{run_id}/robot/report/*zip*/robot-plugin.zip"
-        log_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{run_id}/artifact/results/log.html"
-        report_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{run_id}/artifact/results/report.html"
+        jenkins_report_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{run_id}/robot/"
+        jenkins_zip_link = f"{jenkins_report_link}report/*zip*/robot-plugin.zip"
+        log_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{run_id}/robot/log.html"
+        report_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{run_id}/robot/report.html"
 
         content = [
+            {"type": "paragraph", "content": [{"type": "text", "text": "🗞 Regression Run Summary", "marks": [{"type": "strong"}]}]},
             {"type": "paragraph", "content": [{"type": "text", "text": "📜 Regression Run Summary", "marks": [{"type": "strong"}]}]},
             {"type": "paragraph", "content": [
                 {"type": "text", "text": "Run ID: "},
                 {"type": "text", "text": f"#{run_id}", "marks": [{"type": "link", "attrs": {"href": run_link}}]}
+            ]},
+            {"type": "paragraph", "content": [
+                {"type": "text", "text": "📄 Robot Report", "marks": [{"type": "link", "attrs": {"href": jenkins_report_link}}]},
+                {"type": "text", "text": " | "},
+                {"type": "text", "text": "⬇️ Download ZIP", "marks": [{"type": "link", "attrs": {"href": jenkins_zip_link}}]}
             ]}
         ]
+
         for issue_key, history in sorted(trends.items()):
             title = JIRA_TITLES.get(issue_key, "")
             full_title = f"{issue_key} {title}".strip()
-            content.append({"type": "paragraph", "content": [{"type": "text", "text": f"🔹 {full_title} (last 3 runs):", "marks": [{"type": "strong"}]}]})
-            total_runs = len(history)
-            total_passed = sum(r["passed"] for r in history)
-            total_failed = sum(r["failed"] for r in history)
-            total_tests = sum(r["total"] for r in history)
-            pass_rate = round((total_passed / total_tests) * 100, 1) if total_tests else 0
-            avg_failed = round(total_failed / total_runs, 1) if total_runs else 0
-            for record in history:
-                ts = record["timestamp"][:19]
-                content.append({"type": "paragraph", "content": [{"type": "text", "text": f"{ts} — {record['passed']} passed / {record['failed']} failed"}]})
-            content.append({"type": "paragraph", "content": [
-                {"type": "text", "text": f"📈 Pass Rate: {pass_rate}%", "marks": [{"type": "strong"}]},
+@@ -173,39 +167,48 @@
                 {"type": "text", "text": f" | Avg Failures: {avg_failed}", "marks": [{"type": "strong"}]}
             ]})
 
-        content.append({"type": "paragraph", "content": [
-            {"type": "text", "text": "📆 Download ZIP: "},
-            {"type": "text", "text": "robot-plugin.zip", "marks": [{"type": "link", "attrs": {"href": zip_link}}]}
-        ]})
         content.append({"type": "paragraph", "content": [
             {"type": "text", "text": "📄 Robot Log: "},
             {"type": "text", "text": "log.html", "marks": [{"type": "link", "attrs": {"href": log_link}}]}

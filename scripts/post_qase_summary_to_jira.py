@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+import re
 from collections import defaultdict
 from datetime import datetime
 
@@ -110,11 +111,16 @@ def post_comment_to_jira(issue_key, test_items, run_id):
         print(f"❌ Exception while posting to Jira issue {issue_key}: {e}")
 
 def post_consolidated_summary(run_id):
+    def is_valid_jira_key(key):
+        return re.match(r'^DEMO-\d+$', key)
+
     def load_all_histories(directory):
         trends = {}
         for filename in os.listdir(directory):
             if filename.endswith(".json"):
                 issue_key = filename.replace(".json", "")
+                if not is_valid_jira_key(issue_key):
+                    continue
                 path = os.path.join(directory, filename)
                 try:
                     with open(path, "r", encoding="utf-8") as f:

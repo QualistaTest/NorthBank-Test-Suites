@@ -65,7 +65,7 @@ def build_adf_comment(run_id, suite_name, tests, history, include_report_link=Fa
     log_link = f"{ROBOT_REPORT_BASE}/log.html"
 
     content = [
-        {"type": "paragraph", "content": [{"type": "text", "text": f"{suite_name} — Qase Run Summary", "marks": [{"type": "strong"}]}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": f"🔷 {suite_name} — Qase Run Summary", "marks": [{"type": "strong"}]}]},
         {"type": "paragraph", "content": [
             {"type": "text", "text": "Run ID: "},
             {"type": "text", "text": f"#{run_id}", "marks": [{"type": "link", "attrs": {"href": run_link}}]}
@@ -112,7 +112,6 @@ def post_comment(issue_key, adf_body, replace_existing=False):
     headers = {"Content-Type": "application/json"}
     auth = (JIRA_EMAIL, JIRA_API_TOKEN)
 
-    # Replace existing comment logic
     if replace_existing:
         comments_url = f"{url}?orderBy=-created"
         resp = requests.get(comments_url, headers=headers, auth=auth)
@@ -121,11 +120,10 @@ def post_comment(issue_key, adf_body, replace_existing=False):
                 if "Qase Run Summary" in json.dumps(c):
                     comment_id = c["id"]
                     put_url = f"{url}/{comment_id}"
-                    res = requests.put(put_url, headers=headers, auth=auth, json=adf_body)
+                    requests.put(put_url, headers=headers, auth=auth, json=adf_body)
                     print(f"🔄 Updating existing comment on {issue_key}")
                     return
-    # Default: create new comment
-    res = requests.post(url, headers=headers, auth=auth, json=adf_body)
+    requests.post(url, headers=headers, auth=auth, json=adf_body)
     print(f"🆕 Posting new comment to {issue_key}")
 
 # --- MAIN ---
@@ -149,15 +147,13 @@ def main():
         post_comment(issue, adf, replace_existing=True)
         consolidated_data[suite_name] = {"tests": tests, "history": history}
 
-    # Consolidated to DEMO-11
     consolidated_adf = {"body": {"type": "doc", "version": 1, "content": []}}
     for suite, data in consolidated_data.items():
         section = build_adf_comment(run_id, suite, data["tests"], data["history"], include_report_link=True)
         consolidated_adf["body"]["content"].extend(section["body"]["content"])
-        consolidated_adf["body"]["content"].append({"type": "paragraph", "content": []})  # spacer
+        consolidated_adf["body"]["content"].append({"type": "paragraph", "content": []})
 
-    post_comment(CONSOLIDATED_ISSUE, consolidated_adf, replace_existing=False)
-
+    post_comment(CONSOLIDATED_ISSUE, consolidated_adf, replace_existing=True)
 
 if __name__ == "__main__":
     main()

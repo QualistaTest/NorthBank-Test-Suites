@@ -132,7 +132,7 @@ def post_consolidated_summary(run_id):
 
     def build_consolidated_adf(run_id, trends):
         run_link = f"https://app.qase.io/run/{QASE_PROJECT_CODE}/dashboard/{run_id}"
-        zip_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{run_id}/report/*zip*/robot-plugin.zip"
+        zip_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{run_id}/robot/report/*zip*/robot-plugin.zip"
         content = [
             {"type": "paragraph", "content": [{"type": "text", "text": "📜 Regression Suite Run Summary", "marks": [{"type": "strong"}]}]},
             {"type": "paragraph", "content": [

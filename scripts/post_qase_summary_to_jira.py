@@ -3,7 +3,6 @@ import requests
 import json
 import re
 from collections import defaultdict
-from datetime import datetime
 
 # ENV VARS REQUIRED:
 JIRA_API_TOKEN = os.getenv("JIRA_API_TOKEN")
@@ -14,7 +13,6 @@ QASE_SUMMARY_PATH = os.getenv("QASE_SUMMARY_PATH", "results/qase_summary.json")
 JENKINS_BASE_URL = os.getenv("JENKINS_BASE_URL", "http://20.84.40.165:8080")
 JENKINS_JOB_NAME = os.getenv("JENKINS_JOB_NAME", "NorthBankRegression Dev")
 CONSOLIDATED_ISSUE = os.getenv("JIRA_CONSOLIDATED_ISSUE", "DEMO-11")
-HISTORY_DIR = "results/history"
 
 JIRA_TITLES = {
     "DEMO-7": "Account Management",
@@ -53,33 +51,8 @@ def extract_jira_issues(summary_data):
             print(f"⚠️  No Jira issue key found in tags for case {case_id}")
     return issues
 
-def update_history(issue_key, test_items):
-    os.makedirs(HISTORY_DIR, exist_ok=True)
-    path = os.path.join(HISTORY_DIR, f"{issue_key}.json")
-    passed = sum(1 for t in test_items if t["status"] == "Passed")
-    failed = sum(1 for t in test_items if t["status"] == "Failed")
-    total = len(test_items)
-    record = {
-        "timestamp": datetime.utcnow().isoformat(),
-        "passed": passed,
-        "failed": failed,
-        "total": total
-    }
-    history = []
-    if os.path.exists(path):
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                history = json.load(f).get("history", [])
-        except Exception:
-            pass
-    history.append(record)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump({"history": history[-20:]}, f, indent=2)
-    return history[-3:]
-
 def build_adf_comment(test_items, run_id, issue_key):
     run_link = f"https://app.qase.io/run/{QASE_PROJECT_CODE}/dashboard/{run_id}"
-    history = update_history(issue_key, test_items)
     content = [
         {"type": "paragraph", "content": [{"type": "text", "text": "Qase Test Run Summary:", "marks": [{"type": "strong"}]}]},
         {"type": "paragraph", "content": [{"type": "text", "text": "Run ID: "}, {"type": "text", "text": f"#{run_id}", "marks": [{"type": "link", "attrs": {"href": run_link}}]}]}
@@ -95,11 +68,6 @@ def build_adf_comment(test_items, run_id, issue_key):
         content.append({"type": "paragraph", "content": [{"type": "text", "text": "❌ Failed:", "marks": [{"type": "strong"}]}]})
         for test in grouped["Failed"]:
             content.append({"type": "paragraph", "content": [{"type": "text", "text": f"- {test['title']}"}]})
-    if history:
-        content.append({"type": "paragraph", "content": [{"type": "text", "text": "📊 Last 3 runs:", "marks": [{"type": "strong"}]}]})
-        for h in history:
-            summary = f"{h['timestamp'][:19]} — {h['passed']} passed / {h['failed']} failed"
-            content.append({"type": "paragraph", "content": [{"type": "text", "text": summary}]})
     return {"body": {"type": "doc", "version": 1, "content": content}}
 
 def post_comment_to_jira(issue_key, test_items, run_id):
@@ -118,62 +86,63 @@ def post_comment_to_jira(issue_key, test_items, run_id):
         print(f"❌ Exception while posting to Jira issue {issue_key}: {e}")
 
 def post_consolidated_summary(run_id):
-    def is_valid_jira_key(key):
-        return re.match(r'^DEMO-\d+$', key)
+    summary_data = read_qase_summary(QASE_SUMMARY_PATH)
+    run_link = f"https://app.qase.io/run/{QASE_PROJECT_CODE}/dashboard/{run_id}"
+    jenkins_report_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{run_id}/robot/"
+    results = summary_data.get("results", [])
 
-    def load_all_histories(directory):
-        trends = {}
-        for filename in os.listdir(directory):
-            if filename.endswith(".json"):
-                issue_key = filename.replace(".json", "")
-                if not is_valid_jira_key(issue_key):
-                    continue
-                path = os.path.join(directory, filename)
-                try:
-                    with open(path, "r", encoding="utf-8") as f:
-                        data = json.load(f).get("history", [])
-                        trends[issue_key] = data[-3:]
-                except Exception:
-                    continue
-        return trends
+    grouped = defaultdict(list)
+    for test in results:
+        name = test.get("name", "Unnamed Test")
+        status = test.get("status", "unknown").lower()
+        tags = test.get("tags", [])
+        story = next((tag for tag in tags if tag.startswith("DEMO-")), None)
+        if story:
+            grouped[story].append({"title": name, "status": status})
 
-    def build_consolidated_adf(run_id, trends):
-        run_link = f"https://app.qase.io/run/{QASE_PROJECT_CODE}/dashboard/{run_id}"
-        jenkins_report_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{run_id}/robot/"
+    total_executed = len(results)
+    total_passed = sum(1 for t in results if t.get("status", "").lower() == "passed")
+    total_failed = sum(1 for t in results if t.get("status", "").lower() == "failed")
+    total_skipped = total_executed - total_passed - total_failed
 
-        content = [
-            {"type": "paragraph", "content": [{"type": "text", "text": "📜 Regression Run Summary", "marks": [{"type": "strong"}]}]},
-            {"type": "paragraph", "content": [
-                {"type": "text", "text": "Run ID: "},
-                {"type": "text", "text": f"#{run_id}", "marks": [{"type": "link", "attrs": {"href": run_link}}]}
-            ]},
-            {"type": "paragraph", "content": [
-                {"type": "text", "text": "📄 Robot Report", "marks": [{"type": "link", "attrs": {"href": jenkins_report_link}}]}
-            ]}
-        ]
+    content = [
+        {"type": "paragraph", "content": [{"type": "text", "text": "📜 Regression Run Summary", "marks": [{"type": "strong"}]}]},
+        {"type": "paragraph", "content": [
+            {"type": "text", "text": "Run ID: "},
+            {"type": "text", "text": f"#{run_id}", "marks": [{"type": "link", "attrs": {"href": run_link}}]}
+        ]},
+        {"type": "paragraph", "content": [
+            {"type": "text", "text": "📄 Robot Report", "marks": [{"type": "link", "attrs": {"href": jenkins_report_link}}]}
+        ]}
+    ]
 
-        for issue_key, history in sorted(trends.items()):
-            title = JIRA_TITLES.get(issue_key, "")
-            full_title = f"{issue_key} {title}".strip()
-            content.append({"type": "paragraph", "content": [{"type": "text", "text": f"🔹 {full_title} (last 3 runs):", "marks": [{"type": "strong"}]}]})
-            total_runs = len(history)
-            total_passed = sum(r["passed"] for r in history)
-            total_failed = sum(r["failed"] for r in history)
-            total_tests = sum(r["total"] for r in history)
-            pass_rate = round((total_passed / total_tests) * 100, 1) if total_tests else 0
-            avg_failed = round(total_failed / total_runs, 1) if total_runs else 0
-            for record in history:
-                ts = record["timestamp"][:19]
-                content.append({"type": "paragraph", "content": [{"type": "text", "text": f"{ts} — {record['passed']} passed / {record['failed']} failed"}]})
+    for issue_key, tests in sorted(grouped.items()):
+        title = JIRA_TITLES.get(issue_key, "")
+        header = f"🔹 {issue_key} {title}".strip()
+        content.append({"type": "paragraph", "content": [{"type": "text", "text": f"{header}:", "marks": [{"type": "strong"}]}]})
+        for test in tests:
+            mark = "✅" if test["status"] == "passed" else "❌"
+            suffix = "passed" if test["status"] == "passed" else "failed"
             content.append({"type": "paragraph", "content": [
-                {"type": "text", "text": f"📈 Pass Rate: {pass_rate}%", "marks": [{"type": "strong"}]},
-                {"type": "text", "text": f" | Avg Failures: {avg_failed}", "marks": [{"type": "strong"}]}
+                {"type": "text", "text": f"{mark} {test['title']} - {suffix}"}
             ]})
 
-        return {"body": {"type": "doc", "version": 1, "content": content}}
+    content.extend([
+        {"type": "paragraph", "content": [
+            {"type": "text", "text": f"\nTotal executed: {total_executed}", "marks": [{"type": "em"}]}
+        ]},
+        {"type": "paragraph", "content": [
+            {"type": "text", "text": f"Total passed: {total_passed}", "marks": [{"type": "em"}]}
+        ]},
+        {"type": "paragraph", "content": [
+            {"type": "text", "text": f"Total failed: {total_failed}", "marks": [{"type": "em"}]}
+        ]},
+        {"type": "paragraph", "content": [
+            {"type": "text", "text": f"Skipped: {total_skipped}", "marks": [{"type": "em"}]}
+        ]}
+    ])
 
-    trends = load_all_histories(HISTORY_DIR)
-    payload = build_consolidated_adf(run_id, trends)
+    payload = {"body": {"type": "doc", "version": 1, "content": content}}
     url = f"{JIRA_BASE_URL}/rest/api/3/issue/{CONSOLIDATED_ISSUE}/comment"
     headers = {"Content-Type": "application/json"}
     auth = (JIRA_EMAIL, JIRA_API_TOKEN)

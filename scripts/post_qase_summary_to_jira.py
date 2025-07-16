@@ -101,24 +101,28 @@ def post_comment(issue_key, adf_body):
     headers = {"Content-Type": "application/json"}
     auth = (JIRA_EMAIL, JIRA_API_TOKEN)
 
-    comments_url = f"{url}?orderBy=-created"
-    resp = requests.get(comments_url, headers=headers, auth=auth)
-    if resp.status_code == 200:
-        for c in resp.json().get("comments", []):
-            if "Regression Run Summary" in json.dumps(c):
-                comment_id = c["id"]
-                put_url = f"{url}/{comment_id}"
-                res = requests.put(put_url, headers=headers, auth=auth, json=adf_body)
-                if res.ok:
-                    print("🔄 Updated consolidated comment.")
+    try:
+        comments_url = f"{url}?orderBy=-created"
+        resp = requests.get(comments_url, headers=headers, auth=auth)
+        if resp.status_code == 200:
+            for c in resp.json().get("comments", []):
+                if "Regression Run Summary" in json.dumps(c):
+                    comment_id = c["id"]
+                    put_url = f"{url}/{comment_id}"
+                    res = requests.put(put_url, headers=headers, auth=auth, json={"body": adf_body["body"]})
+                    if res.ok:
+                        print("🔄 Updated consolidated comment.")
+                    else:
+                        print(f"❌ Failed to update comment: {res.status_code} - {res.text}")
                     return
-                else:
-                    print(f"❌ Failed to update comment: {res.status_code}")
-    res = requests.post(url, headers=headers, auth=auth, json=adf_body)
-    if res.ok:
-        print("🆕 Posted new consolidated comment.")
-    else:
-        print(f"❌ Failed to post comment: {res.status_code}")
+        # If not found, post new
+        res = requests.post(url, headers=headers, auth=auth, json={"body": adf_body["body"]})
+        if res.ok:
+            print("🆕 Posted new consolidated comment.")
+        else:
+            print(f"❌ Failed to post comment: {res.status_code} - {res.text}")
+    except Exception as e:
+        print(f"💥 Exception while posting comment: {e}")
 
 def main():
     summary = read_qase_summary(QASE_SUMMARY_PATH)

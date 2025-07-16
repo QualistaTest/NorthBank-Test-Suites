@@ -85,9 +85,9 @@ def build_adf_comment(run_id, tests, history):
             {"type": "text", "text": f" rate, avg {avg_failed} fails", "marks": [{"type": "strong"}]}
         ]})
         for h in history:
-            result_line = f"{h['timestamp'][:19]} — {h['passed']} passed / {h['failed']} failed"
+            summary = f"{h['timestamp'][:19]} — {h['passed']} passed / {h['failed']} failed"
             marks = [{"type": "textColor", "attrs": {"color": "green" if h['failed'] == 0 else "red"}}]
-            content.append({"type": "paragraph", "content": [{"type": "text", "text": result_line, "marks": marks}]})
+            content.append({"type": "paragraph", "content": [{"type": "text", "text": summary, "marks": marks}]})
 
     content.append({"type": "paragraph", "content": [
         {"type": "text", "text": "🔗 "},
@@ -108,11 +108,17 @@ def post_comment(issue_key, adf_body):
             if "Regression Run Summary" in json.dumps(c):
                 comment_id = c["id"]
                 put_url = f"{url}/{comment_id}"
-                requests.put(put_url, headers=headers, auth=auth, json=adf_body)
-                print("🔄 Updated consolidated comment.")
-                return
-    requests.post(url, headers=headers, auth=auth, json=adf_body)
-    print("🆕 Posted new consolidated comment.")
+                res = requests.put(put_url, headers=headers, auth=auth, json=adf_body)
+                if res.ok:
+                    print("🔄 Updated consolidated comment.")
+                    return
+                else:
+                    print(f"❌ Failed to update comment: {res.status_code}")
+    res = requests.post(url, headers=headers, auth=auth, json=adf_body)
+    if res.ok:
+        print("🆕 Posted new consolidated comment.")
+    else:
+        print(f"❌ Failed to post comment: {res.status_code}")
 
 def main():
     summary = read_qase_summary(QASE_SUMMARY_PATH)

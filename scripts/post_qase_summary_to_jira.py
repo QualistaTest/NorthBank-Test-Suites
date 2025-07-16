@@ -16,6 +16,13 @@ JENKINS_JOB_NAME = os.getenv("JENKINS_JOB_NAME", "NorthBankRegression Dev")
 CONSOLIDATED_ISSUE = os.getenv("JIRA_CONSOLIDATED_ISSUE", "DEMO-11")
 HISTORY_DIR = "results/history"
 
+JIRA_TITLES = {
+    "DEMO-7": "Account Management",
+    "DEMO-8": "Transactions",
+    "DEMO-9": "Transfers",
+    "DEMO-10": "Authentication"
+}
+
 def read_qase_summary(filepath):
     print(f"📄 Reading Qase summary file from: {filepath}")
     if not os.path.exists(filepath):
@@ -132,16 +139,17 @@ def post_consolidated_summary(run_id):
 
     def build_consolidated_adf(run_id, trends):
         run_link = f"https://app.qase.io/run/{QASE_PROJECT_CODE}/dashboard/{run_id}"
-        zip_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{run_id}/artifact/robot/report/robot-plugin.zip"
         content = [
-            {"type": "paragraph", "content": [{"type": "text", "text": "📜 Regression Suite Run Summary", "marks": [{"type": "strong"}]}]},
+            {"type": "paragraph", "content": [{"type": "text", "text": "🧾 Regression Run Summary", "marks": [{"type": "strong"}]}]},
             {"type": "paragraph", "content": [
                 {"type": "text", "text": "Run ID: "},
                 {"type": "text", "text": f"#{run_id}", "marks": [{"type": "link", "attrs": {"href": run_link}}]}
             ]}
         ]
         for issue_key, history in sorted(trends.items()):
-            content.append({"type": "paragraph", "content": [{"type": "text", "text": f"🔹 {issue_key} (last 3 runs):", "marks": [{"type": "strong"}]}]})
+            title = JIRA_TITLES.get(issue_key, "")
+            full_title = f"{issue_key} {title}".strip()
+            content.append({"type": "paragraph", "content": [{"type": "text", "text": f"🔹 {full_title} (last 3 runs):", "marks": [{"type": "strong"}]}]})
             total_runs = len(history)
             total_passed = sum(r["passed"] for r in history)
             total_failed = sum(r["failed"] for r in history)
@@ -155,7 +163,6 @@ def post_consolidated_summary(run_id):
                 {"type": "text", "text": f"📈 Pass Rate: {pass_rate}%", "marks": [{"type": "strong"}]},
                 {"type": "text", "text": f" | Avg Failures: {avg_failed}", "marks": [{"type": "strong"}]}
             ]})
-        content.append({"type": "paragraph", "content": [{"type": "text", "text": "📦 Download ZIP: "}, {"type": "text", "text": "robot-plugin.zip", "marks": [{"type": "link", "attrs": {"href": zip_link}}]}]})
         return {"body": {"type": "doc", "version": 1, "content": content}}
 
     trends = load_all_histories(HISTORY_DIR)

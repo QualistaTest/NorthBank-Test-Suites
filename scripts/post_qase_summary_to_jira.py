@@ -12,6 +12,7 @@ QASE_PROJECT_CODE = os.getenv("QASE_PROJECT_CODE", "Demo")
 QASE_SUMMARY_PATH = os.getenv("QASE_SUMMARY_PATH", "results/qase_summary.json")
 JENKINS_BASE_URL = os.getenv("JENKINS_BASE_URL", "http://20.84.40.165:8080")
 JENKINS_JOB_NAME = os.getenv("JENKINS_JOB_NAME", "NorthBankRegression Dev")
+JENKINS_BUILD_ID = os.getenv("JENKINS_BUILD_ID")  # NEW
 CONSOLIDATED_ISSUE = os.getenv("JIRA_CONSOLIDATED_ISSUE", "DEMO-11")
 
 JIRA_TITLES = {
@@ -88,7 +89,7 @@ def post_comment_to_jira(issue_key, test_items, run_id):
 def post_consolidated_summary(run_id):
     summary_data = read_qase_summary(QASE_SUMMARY_PATH)
     run_link = f"https://app.qase.io/run/{QASE_PROJECT_CODE}/dashboard/{run_id}"
-    jenkins_report_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{run_id}/robot/"
+    jenkins_report_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{JENKINS_BUILD_ID}/robot/"
     results = summary_data.get("results", [])
 
     grouped = defaultdict(list)

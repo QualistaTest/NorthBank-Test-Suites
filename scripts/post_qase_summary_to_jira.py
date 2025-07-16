@@ -132,9 +132,7 @@ def post_consolidated_summary(run_id):
 
     def build_consolidated_adf(run_id, trends):
         run_link = f"https://app.qase.io/run/{QASE_PROJECT_CODE}/dashboard/{run_id}"
-        log_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{run_id}/robot/log.html"
-        report_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{run_id}/robot/report.html"
-        zip_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{run_id}/robot/report/*zip*/robot-plugin.zip"
+        zip_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{run_id}/report/*zip*/robot-plugin.zip"
         content = [
             {"type": "paragraph", "content": [{"type": "text", "text": "📜 Regression Suite Run Summary", "marks": [{"type": "strong"}]}]},
             {"type": "paragraph", "content": [
@@ -157,12 +155,7 @@ def post_consolidated_summary(run_id):
                 {"type": "text", "text": f"📈 Pass Rate: {pass_rate}%", "marks": [{"type": "strong"}]},
                 {"type": "text", "text": f" | Avg Failures: {avg_failed}", "marks": [{"type": "strong"}]}
             ]})
-        content += [
-            {"type": "paragraph", "content": [{"type": "text", "text": "📄 Robot Framework Reports", "marks": [{"type": "strong"}]}]},
-            {"type": "paragraph", "content": [{"type": "text", "text": "🔗 Log: "}, {"type": "text", "text": "log.html", "marks": [{"type": "link", "attrs": {"href": log_link}}]}]},
-            {"type": "paragraph", "content": [{"type": "text", "text": "🔗 Report: "}, {"type": "text", "text": "report.html", "marks": [{"type": "link", "attrs": {"href": report_link}}]}]},
-            {"type": "paragraph", "content": [{"type": "text", "text": "📦 Download ZIP: "}, {"type": "text", "text": "robot-plugin.zip", "marks": [{"type": "link", "attrs": {"href": zip_link}}]}]}
-        ]
+        content.append({"type": "paragraph", "content": [{"type": "text", "text": "📦 Download ZIP: "}, {"type": "text", "text": "robot-plugin.zip", "marks": [{"type": "link", "attrs": {"href": zip_link}}]}]})
         return {"body": {"type": "doc", "version": 1, "content": content}}
 
     trends = load_all_histories(HISTORY_DIR)

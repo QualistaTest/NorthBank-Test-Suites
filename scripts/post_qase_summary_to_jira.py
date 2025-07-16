@@ -94,11 +94,15 @@ def build_adf_comment(run_id, tests, history):
         {"type": "text", "text": "Download Report ZIP", "marks": [{"type": "link", "attrs": {"href": zip_link}}]}
     ]})
 
-    return {"body": {"type": "doc", "version": 1, "content": content}}
+    return {
+        "type": "doc",
+        "version": 1,
+        "content": content
+    }
 
 def post_comment(issue_key, adf_body):
     url = f"{JIRA_BASE_URL}/rest/api/3/issue/{issue_key}/comment"
-    headers = {"Content-Type": "application/json"}
+    headers = {"Content-Type": "application/json", "Accept": "application/json"}
     auth = (JIRA_EMAIL, JIRA_API_TOKEN)
 
     try:
@@ -106,17 +110,17 @@ def post_comment(issue_key, adf_body):
         resp = requests.get(comments_url, headers=headers, auth=auth)
         if resp.status_code == 200:
             for c in resp.json().get("comments", []):
-                if "Regression Run Summary" in json.dumps(c):
+                if "🧾 Regression Run Summary" in json.dumps(c):
                     comment_id = c["id"]
                     put_url = f"{url}/{comment_id}"
-                    res = requests.put(put_url, headers=headers, auth=auth, json={"body": adf_body["body"]})
+                    res = requests.put(put_url, headers=headers, auth=auth, json={"body": adf_body})
                     if res.ok:
                         print("🔄 Updated consolidated comment.")
                     else:
                         print(f"❌ Failed to update comment: {res.status_code} - {res.text}")
                     return
         # If not found, post new
-        res = requests.post(url, headers=headers, auth=auth, json={"body": adf_body["body"]})
+        res = requests.post(url, headers=headers, auth=auth, json={"body": adf_body})
         if res.ok:
             print("🆕 Posted new consolidated comment.")
         else:
@@ -132,8 +136,8 @@ def main():
         return
     tests = summary.get("results", [])
     history = update_history(tests)
-    adf = build_adf_comment(run_id, tests, history)
-    post_comment(CONSOLIDATED_ISSUE, adf)
+    adf_doc = build_adf_comment(run_id, tests, history)
+    post_comment(CONSOLIDATED_ISSUE, adf_doc)
 
 if __name__ == "__main__":
     main()

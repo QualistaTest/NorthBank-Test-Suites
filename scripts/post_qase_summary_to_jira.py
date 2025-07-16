@@ -1,8 +1,8 @@
 import os
 import requests
 import json
-import re
 from collections import defaultdict
+from urllib.parse import quote
 
 # ENV VARS REQUIRED:
 JIRA_API_TOKEN = os.getenv("JIRA_API_TOKEN")
@@ -12,6 +12,7 @@ QASE_PROJECT_CODE = os.getenv("QASE_PROJECT_CODE", "Demo")
 QASE_SUMMARY_PATH = os.getenv("QASE_SUMMARY_PATH", "results/qase_summary.json")
 JENKINS_BASE_URL = os.getenv("JENKINS_BASE_URL", "http://20.84.40.165:8080")
 JENKINS_JOB_NAME = os.getenv("JENKINS_JOB_NAME", "NorthBankRegression Dev")
+JENKINS_BUILD_NUMBER = os.getenv("BUILD_NUMBER")
 CONSOLIDATED_ISSUE = os.getenv("JIRA_CONSOLIDATED_ISSUE", "DEMO-11")
 
 JIRA_TITLES = {
@@ -51,44 +52,6 @@ def extract_jira_issues(summary_data):
             print(f"⚠️  No Jira issue key found in tags for case {case_id}")
     return issues
 
-def get_jenkins_build_id_for_run(run_id):
-    job_url = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME.replace(' ', '%20')}/api/json?tree=builds[number,url]"
-    try:
-        print("🚀 Fetching recent Jenkins builds to find matching run_id...")
-        builds_resp = requests.get(job_url)
-        builds_resp.raise_for_status()
-        builds = builds_resp.json().get("builds", [])[:20]
-
-        for build in builds:
-            build_number = build["number"]
-            build_url = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME.replace(' ', '%20')}/{build_number}/api/json"
-            detail_resp = requests.get(build_url)
-            detail_resp.raise_for_status()
-            description = detail_resp.json().get("description", "")
-            if str(run_id) in description:
-                print(f"✅ Matched run_id {run_id} to build #{build_number}")
-                return build_number
-        print(f"❌ No Jenkins build found with run_id {run_id} in description")
-        return None
-    except Exception as e:
-        print(f"❌ Failed to fetch Jenkins build info: {e}")
-        return None
-
-def post_comment_to_jira(issue_key, test_items, run_id):
-    url = f"{JIRA_BASE_URL}/rest/api/3/issue/{issue_key}/comment"
-    headers = {"Content-Type": "application/json"}
-    auth = (JIRA_EMAIL, JIRA_API_TOKEN)
-    payload = build_adf_comment(test_items, run_id, issue_key)
-    print(f"📝 Posting comment to Jira issue: {issue_key}")
-    try:
-        response = requests.post(url, headers=headers, json=payload, auth=auth)
-        if response.status_code >= 300:
-            print(f"❌ Failed to post comment to {issue_key}: {response.status_code} - {response.text}")
-        else:
-            print(f"✅ Comment successfully posted to {issue_key}")
-    except Exception as e:
-        print(f"❌ Exception while posting to Jira issue {issue_key}: {e}")
-
 def build_adf_comment(test_items, run_id, issue_key):
     run_link = f"https://app.qase.io/run/{QASE_PROJECT_CODE}/dashboard/{run_id}"
     content = [
@@ -108,13 +71,27 @@ def build_adf_comment(test_items, run_id, issue_key):
             content.append({"type": "paragraph", "content": [{"type": "text", "text": f"- {test['title']}"}]})
     return {"body": {"type": "doc", "version": 1, "content": content}}
 
+def post_comment_to_jira(issue_key, test_items, run_id):
+    url = f"{JIRA_BASE_URL}/rest/api/3/issue/{issue_key}/comment"
+    headers = {"Content-Type": "application/json"}
+    auth = (JIRA_EMAIL, JIRA_API_TOKEN)
+    payload = build_adf_comment(test_items, run_id, issue_key)
+    print(f"📝 Posting comment to Jira issue: {issue_key}")
+    try:
+        response = requests.post(url, headers=headers, json=payload, auth=auth)
+        if response.status_code >= 300:
+            print(f"❌ Failed to post comment to {issue_key}: {response.status_code} - {response.text}")
+        else:
+            print(f"✅ Comment successfully posted to {issue_key}")
+    except Exception as e:
+        print(f"❌ Exception while posting to Jira issue {issue_key}: {e}")
+
 def post_consolidated_summary(run_id):
     summary_data = read_qase_summary(QASE_SUMMARY_PATH)
-    results = summary_data.get("results", [])
-    build_id = get_jenkins_build_id_for_run(run_id) or run_id
-
     run_link = f"https://app.qase.io/run/{QASE_PROJECT_CODE}/dashboard/{run_id}"
-    robot_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME.replace(' ', '%20')}/{build_id}/robot/"
+    encoded_job_name = quote(JENKINS_JOB_NAME, safe='')
+    robot_report_link = f"{JENKINS_BASE_URL}/job/{encoded_job_name}/{JENKINS_BUILD_NUMBER}/robot/"
+    results = summary_data.get("results", [])
 
     grouped = defaultdict(list)
     for test in results:
@@ -137,22 +114,34 @@ def post_consolidated_summary(run_id):
             {"type": "text", "text": f"#{run_id}", "marks": [{"type": "link", "attrs": {"href": run_link}}]}
         ]},
         {"type": "paragraph", "content": [
-            {"type": "text", "text": "📄 Robot Report", "marks": [{"type": "link", "attrs": {"href": robot_link}}]}
+            {"type": "text", "text": "📄 Robot Report", "marks": [{"type": "link", "attrs": {"href": robot_report_link}}]}
         ]}
     ]
 
     for issue_key, tests in sorted(grouped.items()):
         title = JIRA_TITLES.get(issue_key, "")
-        content.append({"type": "paragraph", "content": [{"type": "text", "text": f"🔹 {issue_key} {title}:", "marks": [{"type": "strong"}]}]})
+        header = f"🔹 {issue_key} {title}".strip()
+        content.append({"type": "paragraph", "content": [{"type": "text", "text": f"{header}:", "marks": [{"type": "strong"}]}]})
         for test in tests:
-            emoji = "✅" if test["status"] == "passed" else "❌"
-            content.append({"type": "paragraph", "content": [{"type": "text", "text": f"{emoji} {test['title']} - {test['status']}"}]})
+            mark = "✅" if test["status"] == "passed" else "❌"
+            suffix = "passed" if test["status"] == "passed" else "failed"
+            content.append({"type": "paragraph", "content": [
+                {"type": "text", "text": f"{mark} {test['title']} - {suffix}"}
+            ]})
 
     content.extend([
-        {"type": "paragraph", "content": [{"type": "text", "text": f"\nTotal executed: {total_executed}", "marks": [{"type": "em"}]}]},
-        {"type": "paragraph", "content": [{"type": "text", "text": f"Total passed: {total_passed}", "marks": [{"type": "em"}]}]},
-        {"type": "paragraph", "content": [{"type": "text", "text": f"Total failed: {total_failed}", "marks": [{"type": "em"}]}]},
-        {"type": "paragraph", "content": [{"type": "text", "text": f"Skipped: {total_skipped}", "marks": [{"type": "em"}]}]}
+        {"type": "paragraph", "content": [
+            {"type": "text", "text": f"\nTotal executed: {total_executed}", "marks": [{"type": "em"}]}
+        ]},
+        {"type": "paragraph", "content": [
+            {"type": "text", "text": f"Total passed: {total_passed}", "marks": [{"type": "em"}]}
+        ]},
+        {"type": "paragraph", "content": [
+            {"type": "text", "text": f"Total failed: {total_failed}", "marks": [{"type": "em"}]}
+        ]},
+        {"type": "paragraph", "content": [
+            {"type": "text", "text": f"Skipped: {total_skipped}", "marks": [{"type": "em"}]}
+        ]}
     ])
 
     payload = {"body": {"type": "doc", "version": 1, "content": content}}
@@ -179,6 +168,9 @@ def main():
         print("❌ Qase run_id not found in summary.")
         exit(1)
     issues = extract_jira_issues(summary_data)
+    if not issues:
+        print("⚠️  No matching Jira issues found in test results.")
+        return
     for issue_key, test_items in issues.items():
         post_comment_to_jira(issue_key, test_items, run_id)
     post_consolidated_summary(run_id)

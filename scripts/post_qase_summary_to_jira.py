@@ -161,7 +161,18 @@ def post_consolidated_summary(run_id):
         for issue_key, history in sorted(trends.items()):
             title = JIRA_TITLES.get(issue_key, "")
             full_title = f"{issue_key} {title}".strip()
-@@ -173,39 +167,48 @@
+            content.append({"type": "paragraph", "content": [{"type": "text", "text": f"🔹 {full_title} (last 3 runs):", "marks": [{"type": "strong"}]}]})
+            total_runs = len(history)
+            total_passed = sum(r["passed"] for r in history)
+            total_failed = sum(r["failed"] for r in history)
+            total_tests = sum(r["total"] for r in history)
+            pass_rate = round((total_passed / total_tests) * 100, 1) if total_tests else 0
+            avg_failed = round(total_failed / total_runs, 1) if total_runs else 0
+            for record in history:
+                ts = record["timestamp"][:19]
+                content.append({"type": "paragraph", "content": [{"type": "text", "text": f"{ts} — {record['passed']} passed / {record['failed']} failed"}]})
+            content.append({"type": "paragraph", "content": [
+                {"type": "text", "text": f"📈 Pass Rate: {pass_rate}%", "marks": [{"type": "strong"}]},
                 {"type": "text", "text": f" | Avg Failures: {avg_failed}", "marks": [{"type": "strong"}]}
             ]})
 

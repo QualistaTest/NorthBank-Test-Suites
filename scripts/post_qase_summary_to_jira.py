@@ -140,21 +140,15 @@ def post_consolidated_summary(run_id):
     def build_consolidated_adf(run_id, trends):
         run_link = f"https://app.qase.io/run/{QASE_PROJECT_CODE}/dashboard/{run_id}"
         jenkins_report_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{run_id}/robot/"
-        jenkins_zip_link = f"{jenkins_report_link}report/*zip*/robot-plugin.zip"
-        log_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{run_id}/robot/log.html"
-        report_link = f"{JENKINS_BASE_URL}/job/{JENKINS_JOB_NAME}/{run_id}/robot/report.html"
 
         content = [
-            {"type": "paragraph", "content": [{"type": "text", "text": "🗞 Regression Run Summary", "marks": [{"type": "strong"}]}]},
             {"type": "paragraph", "content": [{"type": "text", "text": "📜 Regression Run Summary", "marks": [{"type": "strong"}]}]},
             {"type": "paragraph", "content": [
                 {"type": "text", "text": "Run ID: "},
                 {"type": "text", "text": f"#{run_id}", "marks": [{"type": "link", "attrs": {"href": run_link}}]}
             ]},
             {"type": "paragraph", "content": [
-                {"type": "text", "text": "📄 Robot Report", "marks": [{"type": "link", "attrs": {"href": jenkins_report_link}}]},
-                {"type": "text", "text": " | "},
-                {"type": "text", "text": "⬇️ Download ZIP", "marks": [{"type": "link", "attrs": {"href": jenkins_zip_link}}]}
+                {"type": "text", "text": "📄 Robot Report", "marks": [{"type": "link", "attrs": {"href": jenkins_report_link}}]}
             ]}
         ]
 
@@ -175,15 +169,6 @@ def post_consolidated_summary(run_id):
                 {"type": "text", "text": f"📈 Pass Rate: {pass_rate}%", "marks": [{"type": "strong"}]},
                 {"type": "text", "text": f" | Avg Failures: {avg_failed}", "marks": [{"type": "strong"}]}
             ]})
-
-        content.append({"type": "paragraph", "content": [
-            {"type": "text", "text": "📄 Robot Log: "},
-            {"type": "text", "text": "log.html", "marks": [{"type": "link", "attrs": {"href": log_link}}]}
-        ]})
-        content.append({"type": "paragraph", "content": [
-            {"type": "text", "text": "📊 Robot Report: "},
-            {"type": "text", "text": "report.html", "marks": [{"type": "link", "attrs": {"href": report_link}}]}
-        ]})
 
         return {"body": {"type": "doc", "version": 1, "content": content}}
 

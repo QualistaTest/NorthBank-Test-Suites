@@ -1,10 +1,13 @@
 import sys
 import json
-from robot.api import ExecutionResult, ResultVisitor
+from robot.api import ExecutionResult
 
+# Get path to output.xml from CLI
 input_file = sys.argv[1]
+
+# Load the Robot test result
 result = ExecutionResult(input_file)
-result.visit(lambda x: None)
+result.configure(statistics=False, suite_stat_level=2)
 
 entities = []
 case_id = 1
@@ -23,11 +26,6 @@ def extract_tests(suite):
         extract_tests(child)
 
 extract_tests(result.suite)
-
-# Final safety check before output
-if not entities:
-    print(json.dumps({"result": {"entities": []}}))
-    sys.exit(0)
 
 payload = {
     "result": {

@@ -2,12 +2,9 @@ import sys
 import json
 from robot.api import ExecutionResult
 
-# Get path to output.xml from CLI
 input_file = sys.argv[1]
-
-# Load the Robot test result
 result = ExecutionResult(input_file)
-result.configure(statistics=False, suite_stat_level=2)
+result.configure(output_directory="results")
 
 entities = []
 case_id = 1
@@ -26,6 +23,9 @@ def extract_tests(suite):
         extract_tests(child)
 
 extract_tests(result.suite)
+
+# Debug output to Jenkins console
+print(f"Found {len(entities)} test case(s)", file=sys.stderr)
 
 payload = {
     "result": {

@@ -1,15 +1,13 @@
 import sys
 import json
-from robot.api import ExecutionResult
-
-# Usage: python3 scripts/parse_robot_to_entities.py results/output.xml
+from robot.api import ExecutionResult, ResultVisitor
 
 input_file = sys.argv[1]
 result = ExecutionResult(input_file)
 result.visit(lambda x: None)
 
 entities = []
-case_id = 1  # manually generate incremental case IDs
+case_id = 1
 
 def extract_tests(suite):
     global case_id
@@ -17,7 +15,7 @@ def extract_tests(suite):
         entities.append({
             "case_id": case_id,
             "name": test.name,
-            "status": test.status.lower(),  # e.g., "failed", "passed"
+            "status": test.status.lower(),
             "message": test.message or ""
         })
         case_id += 1
@@ -25,6 +23,11 @@ def extract_tests(suite):
         extract_tests(child)
 
 extract_tests(result.suite)
+
+# Final safety check before output
+if not entities:
+    print(json.dumps({"result": {"entities": []}}))
+    sys.exit(0)
 
 payload = {
     "result": {
